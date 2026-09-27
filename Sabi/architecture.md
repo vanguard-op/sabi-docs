@@ -206,21 +206,24 @@ graph TD
     subgraph Channels
         Mobile[Mobile App]
         USSD[USSD and SMS Gateway]
-        WA[WhatsApp Adapter]
+        WA[WhatsApp Channel Adapter]
     end
     subgraph Edge
         API[API Gateway and Backend-for-Frontend]
     end
     subgraph Core
         Auth[Identity and Auth]
+        IDV[Identity Verification Service]
         Orq[Agent Orchestrator]
         Cat[Service Catalogue and Search]
         Reg[Capability Registry]
+        Adapters[Provider Adapters]
         Rec[Receipt Service]
         Notify[Notification Service]
+        Analytics[Analytics and Event Tracking]
         Ops[Operations Console]
     end
-    subgraph Pay
+    subgraph PayGroup[Payments]
         Pay[Payment Module]
     end
     subgraph AI
@@ -234,42 +237,78 @@ graph TD
         Cache[(Cache)]
         Obj[(Object Storage)]
         Search[(Search Index)]
+        Queue[(Queue)]
     end
     subgraph External
         Rail[Licensed Payment Rail]
         Gov[Government Collection and e-Receipt]
-        ID[Identity Verification]
+        IDP[Identity Verification Provider]
         LLM[Model Provider]
-        Telco[USSD, SMS, WhatsApp Providers]
+        Telco[USSD and SMS Provider]
+        WAProv[WhatsApp Provider]
+        Push[Push Notification Provider]
+        Biller[Provider Services]
+        AnalyticsPlat[Analytics Platform]
     end
 
     Mobile --> API
     USSD --> API
     WA --> API
+    USSD --> Telco
+    WA --> WAProv
+    Push --> Mobile
+
     API --> Auth
     API --> Orq
     API --> Rec
+    API --> Analytics
+
     Auth --> DB
+    Orq --> IDV
     Orq --> Cat
     Orq --> Reg
+    Orq --> Adapters
     Orq --> Model
     Orq --> Pay
     Orq --> Rec
-    Model --> Retrieval
-    Retrieval --> Search
-    Eval --> Model
-    Pay --> PayDB
-    Pay --> Rail
-    Rec --> Gov
-    Rec --> Obj
-    Auth --> ID
+    Orq --> Cache
+    Orq --> Analytics
+    IDV --> DB
+    IDV --> IDP
     Cat --> DB
     Cat --> Search
-    Orq --> Cache
-    Rec --> Notify
+    Adapters --> Reg
+    Adapters --> Biller
+    Rec --> Pay
+
+    Model --> Retrieval
+    Model --> LLM
+    Retrieval --> Search
+    Eval --> Model
+    Eval --> DB
+
+    Pay --> PayDB
+    Pay --> Rail
     Pay --> Notify
+    Pay --> Queue
+    Pay --> Analytics
+
+    Rec --> DB
+    Rec --> Gov
+    Rec --> Obj
+    Rec --> Notify
+    Rec --> Analytics
+
     Notify --> Telco
+    Notify --> WAProv
+    Notify --> Push
+    Notify --> Queue
+
+    Analytics --> AnalyticsPlat
+
     Ops --> Pay
     Ops --> Rec
-    Pay --> PayDB
+    Ops --> DB
 ```
+
+Arrows show the direction of a call or a data write: the source component invokes, queries, or writes to the target. Every component and integration in the tables above appears as a node, and no node is left unconnected.
