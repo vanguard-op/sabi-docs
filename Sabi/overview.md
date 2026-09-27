@@ -132,5 +132,7 @@ These users are chosen because the payment obligation is non-optional and recurr
 | [features](features.md) | What gets built, prioritized, with acceptance criteria |
 | [nfr](nfr.md) | The quality targets the system must meet |
 | [roadmap](roadmap.md) | When it gets built, in phases |
+| [architecture](architecture.md) | How the system is structured |
 | [risk-log](risk-log.md) | What could go wrong and the plan for it |
+| [schema](schema.md) | The data model |
 | [model-quality](model-quality.md) | The model behavior and quality contract |
