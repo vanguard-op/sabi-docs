@@ -19,14 +19,14 @@ This document defines the behavior and quality contract for the model-backed cap
 
 **Output:** Structured object with fields: `intent_type` (one of `gov_payment`, `bill_payment`, `discovery`, `status_check`, `receipt_lookup`, `unknown`), `target` (a catalogue service identifier or null), `amount` (integer minor units in `currency`, or null), `currency` (default `NGN`), `reference` (string or null), `constraints` (object), `confidence` (0 to 1), `language`, and `clarifying_question` (string or null). Amounts are integer minor units (kobo for NGN), never decimal major units, and `currency` gives the currency.
 **Reproducibility:** Model version and decoding settings pinned for evaluation; structure is fixed, phrasing of clarifications may vary.
-**Refusal:** If `confidence` is below the cutoff of **0.70**, the model must ask exactly one clarifying question and must not set `intent_type` to a payment type. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
+**Refusal:** If `confidence` is below the cutoff of **0.70**, the model must ask exactly one clarifying question and must not set `intent_type` to a payment type. If confidence is still below 0.70 after that single clarifying question, the model must state that it cannot resolve the request, offer catalogue search and human support, record the query for coverage, and must not initiate a payment. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
 **Fallback:** When the model is unavailable or returns unusable output, the client resolves the request through keyword and search over the catalogue and requires explicit confirmation before any payment.
 
 ### MQ-002: Discovery ranking
 
 **Output:** Ranked list of up to five results, each with `service_id`, `name`, `collecting_body`, `category`, `known_amount` (integer minor units, kobo for NGN, or null), and `confidence`. Includes `no_match` when nothing clears the threshold.
 **Reproducibility:** Ranking order may vary between equivalent queries; membership of the result set is pinned by the evaluation.
-**Refusal:** The model must not fabricate a service or a collecting body. When the catalogue has no match, it returns `no_match` and records the query.
+**Refusal:** The model must not fabricate a service or a collecting body. A serving confidence cutoff of **0.70** applies: below it the model returns `no_match` and records the query for coverage. When the catalogue has no match, it does the same.
 **Fallback:** Non-model keyword search over catalogue names and aliases, with the same no-invention rule.
 
 ### MQ-003: Interface composition
@@ -40,7 +40,7 @@ This document defines the behavior and quality contract for the model-backed cap
 
 **Output:** The same structured schema as MQ-001, plus `detected_language` (one of `en`, `pcm`, `ha`, `yo`, `ig`).
 **Reproducibility:** Pinned like MQ-001.
-**Refusal:** When language confidence is low or input mixes languages such that the dominant language is unclear, the model must confirm the interpreted intent before payment and may switch to English with a note.
+**Refusal:** A serving confidence cutoff of **0.70** applies: below it the model falls back to English with a note and confirms the interpreted intent before any payment. When input mixes languages such that the dominant language is unclear, the model must likewise confirm the interpreted intent before payment and may switch to English with a note.
 **Fallback:** English-only understanding, with the user informed that their language is not yet supported for this request.
 
 ## Quality bar
@@ -56,7 +56,13 @@ Each capability with a judged output carries a measured bar. A threshold applies
 
 A payment capability is held to a higher bar than a discovery capability because a wrong intent moves money to the wrong place. MQ-001 carries the highest threshold for that reason. Each bar has a stated growth path of one point per quarter until it reaches 0.97, pending dataset expansion.
 
-Separately from the accuracy bars above, MQ-001 applies a serving confidence cutoff of **0.70**: below it the model asks exactly one clarifying question and does not resolve a payment intent (see the MQ-001 Refusal rule).
+Separately from the accuracy bars above, a single serving confidence cutoff of **0.70** gates every judged capability that emits a confidence. The cutoff and its per-capability behavior are:
+
+- **MQ-001:** below 0.70 the model asks exactly one clarifying question and does not resolve a payment intent; if confidence is still below 0.70 after that question, it states it cannot resolve, offers search and human support, records the query for coverage, and does not initiate a payment (see the MQ-001 Refusal rule).
+- **MQ-002:** below 0.70 the model returns `no_match` and records the query for coverage.
+- **MQ-004:** below 0.70 the model falls back to English with a note and confirms the interpreted intent before any payment.
+
+MQ-003 carries no serving cutoff: it is judged by schema validity and rubric, not by a confidence value.
 
 ## Grounding, safety, and refusal behavior
 

@@ -42,8 +42,10 @@ The model is flat and referential, targeting a relational primary database with 
     "id": { "type": "string", "description": "Stable identifier for the credential." },
     "userId": { "type": "string", "description": "References the User who owns this credential." },
     "type": { "type": "string", "enum": ["passkey", "recovery_code"], "description": "Kind of credential." },
+    "credentialId": { "type": ["string", "null"], "description": "Authenticator-issued passkey credential id, required to look up a passkey during login; null for a recovery code. A non-secret identifier, not personal data." },
     "publicKey": { "type": ["string", "null"], "description": "Public half of a passkey; null for a recovery code.", "x-personal-data": true },
     "secretHash": { "type": ["string", "null"], "description": "One-way hash of a recovery code; null for a passkey.", "x-personal-data": true },
+    "lookupDigest": { "type": ["string", "null"], "description": "Non-secret, peppered digest of a recovery code used to locate the credential in O(1) before constant-time verification; null for a passkey. Not a secret and not reversible to the code, so not personal data." },
     "signatureCounter": { "type": ["integer", "null"], "description": "Passkey signature counter; null for a recovery code." },
     "status": { "type": "string", "enum": ["active", "revoked", "used"], "description": "Credential lifecycle state." },
     "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." }
@@ -135,7 +137,7 @@ The model is flat and referential, targeting a relational primary database with 
   "type": "object",
   "properties": {
     "id": { "type": "string", "description": "Stable identifier for the provider." },
-    "name": { "type": "string", "description": "Registered provider name." },
+    "name": { "type": "string", "description": "Registered provider name, unique case-insensitively across providers." },
     "type": { "type": "string", "enum": ["agency", "biller", "merchant", "aggregator"], "description": "Kind of provider." },
     "contactEmail": { "type": ["string", "null"], "format": "email", "description": "Operational contact for the provider.", "x-personal-data": true },
     "status": { "type": "string", "enum": ["pending", "active", "suspended", "deregistered"], "description": "Provider lifecycle state." },
@@ -170,6 +172,29 @@ The model is flat and referential, targeting a relational primary database with 
     "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." }
   },
   "required": ["id", "providerId", "name", "inputSchemaRef", "amountSource", "schemaVersion", "healthStatus", "status", "createdAt"]
+}
+```
+
+### CapabilityReview
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/capability-review.schema.json",
+  "title": "CapabilityReview",
+  "description": "A recorded provider or capability review decision, so approvals and quarantine are queryable rather than audit-only.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the review." },
+    "providerId": { "type": "string", "description": "References the Provider under review." },
+    "capabilityId": { "type": ["string", "null"], "description": "References the Capability under review; null for a provider-level decision." },
+    "reviewerRole": { "type": "string", "description": "Role responsible for the decision." },
+    "decision": { "type": "string", "enum": ["approve", "reject", "quarantine", "deregister"], "description": "Outcome of the review." },
+    "reason": { "type": "string", "description": "Stated reason for the decision." },
+    "schemaVersion": { "type": "string", "description": "Version of the capability input schema at review time." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "When the decision was recorded (UTC)." }
+  },
+  "required": ["id", "providerId", "reviewerRole", "decision", "reason", "schemaVersion", "createdAt"]
 }
 ```
 
@@ -427,6 +452,8 @@ The model is flat and referential, targeting a relational primary database with 
 - **Service** `capabilityId` references **Capability**, each service maps to at most one capability.
 - **Capability** `providerId` references **Provider**, each capability is exposed by exactly one provider.
 - **Capability** `serviceId` references **Service**, a capability maps to at most one service.
+- **CapabilityReview** `providerId` references **Provider**, each review concerns exactly one provider.
+- **CapabilityReview** `capabilityId` references **Capability**, a review concerns at most one capability.
 - **PaymentMandate** `userId` references **User**, each mandate is authorised by exactly one user.
 - **PaymentMandate** `capabilityId` references **Capability**, each mandate may name one capability.
 - **PaymentMethod** `userId` references **User**, each method belongs to exactly one user.
@@ -450,4 +477,4 @@ The model is flat and referential, targeting a relational primary database with 
 
 ## Personal data
 
-Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, and `Provider.contactEmail`. Analytics events reference `User.id` only and never these fields.
+Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, and `Provider.contactEmail`. `AuthCredential.credentialId` and `AuthCredential.lookupDigest` are non-secret identifiers and carry no `x-personal-data` annotation. Analytics events reference `User.id` only and never these fields.
