@@ -77,7 +77,7 @@ The system is one deployable application that owns identity, catalogue, the agen
 ### Component: Payment Module
 
 **Responsibility:** Authorises and executes money movement through the licensed rail, in isolation from the rest of the system.
-**Provides:** Signed mandates, execution, payment state machine, idempotency, and the payment audit log.
+**Provides:** Signed mandates, execution, payment state machine, idempotency, payment method management, and the payment audit log.
 **Consumes:** Licensed payment rail, identity verification status, payment records store.
 **Platform notes:** Separately deployable with its own schema and audit log so it can sit behind the licensed partner and be extracted later. Owns the highest availability target (NFR-011). Never performs a partial debit; unknown outcomes are held pending and reconciled (FEAT-009).
 
@@ -143,8 +143,8 @@ The system is one deployable application that owns identity, catalogue, the agen
 
 | Store | Type | What it holds | Access pattern |
 |---|---|---|---|
-| Primary database | Relational | Users, credentials, channel links, verification status, services, providers, capabilities, payments, receipts, cases, reminders, pools | Read-heavy, moderate writes |
-| Payment records store | Relational, isolated | Payment state, mandates, and the payment audit log | Strict transactional writes, append-only audit |
+| Primary database | Relational | Users, credentials, channel links, verification status, services, providers, capabilities, payment methods, payments, receipts, cases, reminders, pools | Read-heavy, moderate writes |
+| Payment records store | Relational, isolated | Payment state, payment events, mandates, and the payment audit log | Strict transactional writes, append-only audit |
 | Cache | In-memory | Sessions, rate-limit counters, hot catalogue entries | Fast reads, TTL expiry |
 | Object storage | Object store | Receipt documents and generated files | Write-once, read-many |
 | Search index | Full-text search | Catalogue service names and aliases | Read-only, updated on change |

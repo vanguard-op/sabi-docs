@@ -62,6 +62,7 @@ Planned maintenance occurs in a published window with at least 48 hours notice, 
 | NFR-027 | Payment authorization integrity | Signed mandate bound to amount, payee, and user, verified before execution | Prevents a changed amount or payee during authorisation |
 | NFR-028 | Audit logging | Authentication, authorization, and privileged actions logged tamper-evidently | Retained per the data lifecycle below |
 | NFR-029 | Supply chain | No known critical CVEs; SBOM maintained; versions pinned | Applies to client and backend |
+| NFR-030 | Accessibility | WCAG 2.2 Level AA for the mobile client, as the target level owned by [branding](branding.md) | Visual implementation (contrast, focus, touch targets) is set in [branding](branding.md); reduced-motion is honoured |
 
 ## Model quality and cost
 
@@ -111,5 +112,6 @@ Access, correction, export, and deletion requests are acknowledged within 72 hou
 | NFR-011 | Synthetic authorization probe | Continuous | Payments |
 | NFR-020 | Penetration test and security review | Pre-launch, annually | Security |
 | NFR-027 | Mandate verification test suite | Every release | Payments |
+| NFR-030 | Accessibility audit against WCAG 2.2 AA | Pre-launch, then every release | Client |
 | NFR-040 | Privacy review and data subject request rehearsal | Pre-launch, annually | Compliance |
 | NFR-050 | Cost telemetry per completed task | Monthly | Platform |

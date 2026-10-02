@@ -2,7 +2,7 @@
 
 ## Overview
 
-The model is flat and referential, targeting a relational primary database with a separate relational store for payment records. Entities are joined by foreign-key scalars rather than nested objects, and each entity maps cleanly onto tables. Personal data fields carry an `x-personal-data` annotation so the retention and deletion rules in [nfr](nfr.md) can locate them. One deliberate denormalization exists: the payment record stores the amount, currency, and payee at execution time so a receipt never changes if a catalogue entry is later edited.
+The model is flat and referential, targeting a relational primary database with a separate relational store for payment records. Entities are joined by foreign-key scalars rather than nested objects, and each entity maps cleanly onto tables. Personal data fields carry an `x-personal-data` annotation so the retention and deletion rules in [nfr](nfr.md) can locate them. One deliberate denormalization exists: the payment record stores the amount, currency, and payee at execution time so a receipt never changes if a catalogue entry is later edited. Payment events record each state change append-only for the case timeline and audit trail, and payment methods store only a masked identifier and an optional processor token, never a full account or card number.
 
 ## Entities
 
@@ -200,6 +200,30 @@ The model is flat and referential, targeting a relational primary database with 
 }
 ```
 
+### PaymentMethod
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/payment-method.schema.json",
+  "title": "PaymentMethod",
+  "description": "A funding source a user can authorise a payment from.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the method." },
+    "userId": { "type": "string", "description": "References the User who owns the method." },
+    "type": { "type": "string", "enum": ["bank_account", "wallet", "card"], "description": "Kind of funding source." },
+    "label": { "type": "string", "description": "Display name, such as a bank or card nickname." },
+    "maskedIdentifier": { "type": "string", "description": "Masked account or card identifier for display; never the full value.", "x-personal-data": true },
+    "processorToken": { "type": ["string", "null"], "description": "Token from the payment processor; null for account and wallet methods. No card number is ever stored.", "x-personal-data": true },
+    "isDefault": { "type": "boolean", "description": "Whether this is the user's default method.", "default": false },
+    "status": { "type": "string", "enum": ["active", "expired", "revoked"], "description": "Method lifecycle state." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." }
+  },
+  "required": ["id", "userId", "type", "label", "maskedIdentifier", "isDefault", "status", "createdAt"]
+}
+```
+
 ### Payment
 
 ```json
@@ -214,9 +238,11 @@ The model is flat and referential, targeting a relational primary database with 
     "userId": { "type": "string", "description": "References the User who paid." },
     "serviceId": { "type": "string", "description": "References the Service being paid." },
     "mandateId": { "type": "string", "description": "References the PaymentMandate authorising this payment." },
+    "paymentMethodId": { "type": ["string", "null"], "description": "References the PaymentMethod that funded the payment; null when settled from a channel without a stored method." },
     "type": { "type": "string", "enum": ["government", "bill"], "description": "Payment category." },
     "amount": { "type": "number", "description": "Amount paid, stored at execution time.", "minimum": 0 },
     "currency": { "type": "string", "description": "Currency code.", "default": "NGN" },
+    "payee": { "type": "string", "description": "Payee as authorised, stored at execution time so a receipt never changes if a catalogue entry is later edited." },
     "channel": { "type": "string", "enum": ["app", "ussd", "sms", "whatsapp"], "description": "Channel the payment was made from." },
     "status": { "type": "string", "enum": ["initiated", "authorized", "pending", "succeeded", "failed", "reversed", "refunded"], "description": "Payment state." },
     "railReference": { "type": ["string", "null"], "description": "Reference returned by the payment rail." },
@@ -226,7 +252,29 @@ The model is flat and referential, targeting a relational primary database with 
     "updatedAt": { "type": "string", "format": "date-time", "description": "Last state change (UTC)." },
     "completedAt": { "type": ["string", "null"], "format": "date-time", "description": "Completion time (UTC); null while open." }
   },
-  "required": ["id", "userId", "serviceId", "mandateId", "type", "amount", "currency", "channel", "status", "idempotencyKey", "createdAt", "updatedAt"]
+  "required": ["id", "userId", "serviceId", "mandateId", "type", "amount", "currency", "payee", "channel", "status", "idempotencyKey", "createdAt", "updatedAt"]
+}
+```
+
+### PaymentEvent
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/payment-event.schema.json",
+  "title": "PaymentEvent",
+  "description": "An append-only record of a state change on a payment.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the event." },
+    "paymentId": { "type": "string", "description": "References the Payment the event belongs to." },
+    "status": { "type": "string", "enum": ["initiated", "authorized", "pending", "succeeded", "failed", "reversed", "refunded"], "description": "Payment state after this event." },
+    "actor": { "type": "string", "enum": ["user", "system", "rail", "provider"], "description": "What caused the state change." },
+    "detail": { "type": ["string", "null"], "description": "Short reason or note attached to the change." },
+    "occurredAt": { "type": "string", "format": "date-time", "description": "When the change occurred (UTC)." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." }
+  },
+  "required": ["id", "paymentId", "status", "actor", "occurredAt", "createdAt"]
 }
 ```
 
@@ -381,9 +429,12 @@ The model is flat and referential, targeting a relational primary database with 
 - **Capability** `serviceId` references **Service**, a capability maps to at most one service.
 - **PaymentMandate** `userId` references **User**, each mandate is authorised by exactly one user.
 - **PaymentMandate** `capabilityId` references **Capability**, each mandate may name one capability.
+- **PaymentMethod** `userId` references **User**, each method belongs to exactly one user.
 - **Payment** `userId` references **User**, each payment is made by exactly one user.
 - **Payment** `serviceId` references **Service**, each payment settles exactly one service.
 - **Payment** `mandateId` references **PaymentMandate**, each payment is authorised by exactly one mandate.
+- **Payment** `paymentMethodId` references **PaymentMethod**, each payment is funded by at most one stored method.
+- **PaymentEvent** `paymentId` references **Payment**, each event belongs to exactly one payment.
 - **Receipt** `paymentId` references **Payment**, each receipt proves exactly one payment.
 - **Receipt** `userId` references **User**, each receipt belongs to exactly one user.
 - **PaymentCase** `paymentId` references **Payment**, each case concerns exactly one payment.
@@ -399,4 +450,4 @@ The model is flat and referential, targeting a relational primary database with 
 
 ## Personal data
 
-Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, and `Provider.contactEmail`. Analytics events reference `User.id` only and never these fields.
+Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, and `Provider.contactEmail`. Analytics events reference `User.id` only and never these fields.

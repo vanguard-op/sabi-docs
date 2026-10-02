@@ -42,6 +42,7 @@
 | R-001 | MTN and Ant International launch a MoMo mini-app super app in Nigeria from Q3 2026, and WhatsApp remains the default for communication, so Sabi is squeezed between an incumbent platform and an entrenched habit ([Techmoonshot](https://techmoonshot.com/2026/06/10/mtn-and-ant-international-partner-to-transform-momo-into-a-super-app-nigeria-goes-first/), [Krestel Digital](https://kresteldigital.com/resources/social-media-statistics-in-nigeria-2026-data-report/)) | 4 | 4 | 16 | Compete on the government and receipt wedge that neither platform is built around; make provider registration open so Sabi can add agencies faster than a closed ecosystem; own Nigerian-language quality | Partner with a licensed payment provider that also wants the government channel; reposition as a layer that works over WhatsApp rather than against it | Product Manager |
 | R-002 | Users reject conversational payment and prefer existing bill-pay screens and agents | 3 | 5 | 15 | Test the interaction before full build; support a conventional fallback form for every task; measure activation and completion from launch | Fall back to a guided form flow with the agent as an assistant rather than the primary interface | Product Manager |
 | R-015 | Fraud, scams, and low trust in digital payments deter adoption, and a single publicised loss damages the brand ([FIJ](https://fij.ng/article/opay-palmpay-keep-publisher-waiting-11-months-after-he-flagged-n480000-taken-by-fraudsters/)) | 4 | 4 | 16 | Signed payment mandates bound to amount and payee; automatic refund path; transparent case status; no custody of balances | Public incident response with restitution, a published post-mortem, and tightened controls | Head of Trust and Safety |
+| R-016 | The incumbent OAGF gateway moves into the consumer channel and contests the government-payment wedge it already owns, since Remita launched a super app with government payments and bill pay in September 2026 ([Daily Post](https://dailypost.ng/2026/09/25/remita-launches-super-mobile-app-to-bring-banking-payments-money-management-into-one-place/)) | 3 | 4 | 12 | Compete on the FTeR-native receipt and the conversational agent rather than on incumbency; keep provider registration open so agencies can be added faster than a closed gateway; own Nigerian-language quality | Position as a layer that sits over the gateway's collection channel, and differentiate on verifiable receipts and reach to feature phones | Product Manager |
 
 ### Technical risks
 
@@ -80,6 +81,7 @@
 | Date | Change | Risk ID | Description |
 |---|---|---|---|
 | 2026-09-26 | Added | R-001 to R-015 | Initial register covering the four weaknesses and five threats in [overview](overview.md) and the model risks required for the AI-core shape |
+| 2026-10-02 | Added | R-016 | New threat in [overview](overview.md): Remita's incumbent gateway moved into the consumer channel |
 
 ## Review cadence
 

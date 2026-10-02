@@ -13,13 +13,13 @@ gantt
     axisFormat  %b %Y
     section Phase 1: Foundations
     Passwordless onboarding      :f001, 2026-10-01, 30d
-    Identity verification        :f002, after f001, 25d
     Understanding requests       :f003, 2026-10-01, 45d
     Service discovery            :f004, after f003, 30d
     Composed task screens        :f011, after f004, 30d
     Provider registration        :f012, after f003, 30d
     section Phase 2: Payment loop
-    Authorise and pay            :f005, 2027-01-01, 40d
+    Identity verification        :f002, 2027-01-01, 25d
+    Authorise and pay            :f005, after f002, 40d
     Government payments          :f006, after f005, 25d
     Everyday bills               :f007, after f005, 25d
     Receipts                     :f008, after f005, 20d
@@ -53,7 +53,6 @@ gantt
 | Feature ID | Feature | Why it matters |
 |---|---|---|
 | FEAT-001 | Passwordless onboarding and identity | Removes the phone-number wall and the password |
-| FEAT-002 | Identity verification for regulated payments | Prepares users for payment without blocking discovery |
 | FEAT-003 | Understanding requests in English and Pidgin | The core of the assistant |
 | FEAT-004 | Service, agency, and biller discovery | Answers the question of where and how much to pay |
 | FEAT-011 | Composed task screens | New providers work without an app update |
@@ -73,6 +72,7 @@ gantt
 
 | Feature ID | Feature | Why it matters |
 |---|---|---|
+| FEAT-002 | Identity verification for regulated payments | Verifies the user before regulated payments |
 | FEAT-005 | Payment authorization and execution | Moves money through a licensed rail |
 | FEAT-006 | Federal government payment flows | Serves the e-receipt mandate and its payers |
 | FEAT-007 | Everyday bill flows | Creates weekly habit for traders and riders |
@@ -80,7 +80,7 @@ gantt
 | FEAT-009 | Payment status, failure, and refund handling | Addresses the trust problem the market complains about |
 | FEAT-010 | USSD and SMS channel | Reaches feature-phone users without data |
 
-This phase cannot ship without the licensed payment partner and the regularised government collection channel. Both are tracked as dependencies in [overview](overview.md).
+This phase cannot ship without the licensed payment partner, the regularised government collection channel, and the identity verification path. These are tracked as dependencies in [overview](overview.md).
 
 ## Phase 3: Reach and trust
 

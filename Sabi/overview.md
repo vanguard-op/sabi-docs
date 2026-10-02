@@ -1,7 +1,7 @@
 # Sabi
 
 **One-liner:** An AI agent that finds, pays for, and stores verifiable receipts for Nigerian government services and everyday bills, through conversation on the phone a user already owns.
-**Status:** Concept
+**Status:** In Documentation
 **Interfaces:** Mobile (Android, iOS), USSD/SMS, WhatsApp
 **AI:** Core
 
@@ -27,6 +27,7 @@ Two choices separate this from a bill-pay screen. First, the interface is genera
 
 **Alternatives today:**
 - OAGF payment gateway (Remita, transitioning to TMRAS) for federal revenue ([Techpoint](https://techpoint.africa/news/nigeria-abandons-remita/))
+- Remita's consumer super app, launched at Nigeria Fintech Week 2026, which brings bank accounts, bill pay, government payments, and money management into one app ([Daily Post](https://dailypost.ng/2026/09/25/remita-launches-super-mobile-app-to-bring-banking-payments-money-management-into-one-place/))
 - Fintech bill-pay inside OPay, PalmPay, and Moniepoint, adopted by up to 88% of surveyed Nigerian smartphone users for banking and fintech apps ([KPMG and Orange](https://assets.kpmg.com/content/dam/kpmgsites/ng/pdf/2026/09/Nigeria%20Smartphone%20Study%20-%20Orange%20Group%20and%20KPMG.pdf.coredownload.inline.pdf))
 - Bank USSD strings and mobile banking apps
 - Physical agent and PoS networks, which Opay and others use for cash-in and cash-out ([Techdom Africa](https://techdomafrica.com/super-apps-must-serve-local-realities/))
@@ -79,6 +80,7 @@ These users are chosen because the payment obligation is non-optional and recurr
 
 ### Threats
 - MTN and Ant International are launching a MoMo mini-app super app in Nigeria from Q3 2026, with telecom distribution and an existing wallet base ([Techmoonshot](https://techmoonshot.com/2026/06/10/mtn-and-ant-international-partner-to-transform-momo-into-a-super-app-nigeria-goes-first/)).
+- The incumbent federal gateway is moving into the consumer channel: Remita launched a super app in September 2026, so the gateway that already owns federal payments now competes for the same users ([Daily Post](https://dailypost.ng/2026/09/25/remita-launches-super-mobile-app-to-bring-banking-payments-money-management-into-one-place/)).
 - WhatsApp holds roughly 51 million Nigerian users and near-universal reach among internet users, so any social or conversational layer competes with an entrenched default ([Krestel Digital](https://kresteldigital.com/resources/social-media-statistics-in-nigeria-2026-data-report/)).
 - CBN licensing categories and PSB restrictions can change the financial surface available under a single entity ([CBN PSB guidelines](https://usercontent.one/wp/www.acaebin.org/wp-content/uploads/2023/07/APPROVED20REVIEWED20GUIDELINES20FOR20LICENSING20AND20REGULATION20OF20PAY.pdf)).
 - Identity data quality is uneven: as of mid-2026 there was a gap between enrolments and issued NINs, and the World Bank flagged accuracy and authentication risks ([HCN Times](https://hcntimes.com/nigeria-needs-62-5-million-nins-in-six-months-to-meet-target/)).
@@ -129,10 +131,13 @@ These users are chosen because the payment obligation is non-optional and recurr
 | Document | Purpose |
 |---|---|
 | [user-personas](user-personas.md) | Who this product is for |
+| [branding](branding.md) | Brand identity, design character, and the design system |
 | [features](features.md) | What gets built, prioritized, with acceptance criteria |
 | [nfr](nfr.md) | The quality targets the system must meet |
 | [roadmap](roadmap.md) | When it gets built, in phases |
 | [architecture](architecture.md) | How the system is structured |
 | [risk-log](risk-log.md) | What could go wrong and the plan for it |
+| [user-flow](user-flow.md) | How users move through the product |
+| [screens](screens.md) + `screens/` | Every screen, its states, and its components |
 | [schema](schema.md) | The data model |
 | [model-quality](model-quality.md) | The model behavior and quality contract |
