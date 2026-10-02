@@ -135,7 +135,7 @@ The system is one deployable application that owns identity, catalogue, the agen
 **Responsibility:** Lets support and compliance staff work cases and audit activity.
 **Provides:** Case queues for failed payments and reversals, receipt disputes, and privileged-action audit views.
 **Consumes:** Payment module, receipt service, identity and auth service.
-**Platform notes:** Admin access requires MFA (NFR-020) and privileged actions are logged tamper-evidently (NFR-028).
+**Platform notes:** Admin access requires MFA (NFR-020) and privileged actions are logged tamper-evidently (NFR-028). The operator roles, provider review, case and reconciliation workflows, and audit review are specified in [operations](operations.md); the Phase 1 surface covers provider review and the audit view, and the case queues arrive with the payment loop.
 
 ## Data architecture
 

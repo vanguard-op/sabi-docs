@@ -59,7 +59,7 @@
 |---|---|---|---|---|---|---|---|
 | R-003 | No distribution. The app competes with services already installed, so growth is slower than planned | 4 | 4 | 16 | Lead with the government e-receipt wedge and provider relationships; use USSD and WhatsApp to reach users without an install; target diaspora payers who have a concrete need | Acquire through agency and provider partnerships and agent networks rather than paid installs | Product Manager |
 | R-008 | Identity data quality or verification failure blocks regulated payments, since NIN records show a gap between enrolments and issued identifiers ([HCN Times](https://hcntimes.com/nigeria-needs-62-5-million-nins-in-six-months-to-meet-target/)) | 3 | 3 | 9 | Accept multiple identity paths (NIN, BVN) where the rail allows; queue verification instead of failing; give a clear correction route | Allow manual verification with supporting documents while the automated path is unavailable | Compliance |
-| R-014 | Support and reversal load grows faster than capacity because failed payments and disputes are common in the market | 3 | 4 | 12 | Automate reversal and receipt cases; expose case status in the app; keep a self-service refund path | Add support capacity and a dedicated dispute queue before a national push | Operations |
+| R-014 | Support and reversal load grows faster than capacity because failed payments and disputes are common in the market | 3 | 4 | 12 | Automate reversal and receipt cases; expose case status in the app; keep a self-service refund path; run the case queues and service windows in [operations](operations.md) | Add support capacity and a dedicated dispute queue before a national push | Operations |
 
 ### Legal and compliance risks
 

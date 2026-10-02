@@ -17,14 +17,14 @@ This document defines the behavior and quality contract for the model-backed cap
 
 ### MQ-001: Intent resolution
 
-**Output:** Structured object with fields: `intent_type` (one of `gov_payment`, `bill_payment`, `discovery`, `status_check`, `receipt_lookup`, `unknown`), `target` (a catalogue service identifier or null), `amount` (number or null), `currency` (default `NGN`), `reference` (string or null), `constraints` (object), `confidence` (0 to 1), `language`, and `clarifying_question` (string or null).
+**Output:** Structured object with fields: `intent_type` (one of `gov_payment`, `bill_payment`, `discovery`, `status_check`, `receipt_lookup`, `unknown`), `target` (a catalogue service identifier or null), `amount` (integer minor units in `currency`, or null), `currency` (default `NGN`), `reference` (string or null), `constraints` (object), `confidence` (0 to 1), `language`, and `clarifying_question` (string or null). Amounts are integer minor units (kobo for NGN), never decimal major units, and `currency` gives the currency.
 **Reproducibility:** Model version and decoding settings pinned for evaluation; structure is fixed, phrasing of clarifications may vary.
 **Refusal:** If `confidence` is below the threshold in the quality bar, the model must ask exactly one clarifying question and must not set `intent_type` to a payment type. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
 **Fallback:** When the model is unavailable or returns unusable output, the client resolves the request through keyword and search over the catalogue and requires explicit confirmation before any payment.
 
 ### MQ-002: Discovery ranking
 
-**Output:** Ranked list of up to five results, each with `service_id`, `name`, `collecting_body`, `category`, `known_amount` (number or null), and `confidence`. Includes `no_match` when nothing clears the threshold.
+**Output:** Ranked list of up to five results, each with `service_id`, `name`, `collecting_body`, `category`, `known_amount` (integer minor units, kobo for NGN, or null), and `confidence`. Includes `no_match` when nothing clears the threshold.
 **Reproducibility:** Ranking order may vary between equivalent queries; membership of the result set is pinned by the evaluation.
 **Refusal:** The model must not fabricate a service or a collecting body. When the catalogue has no match, it returns `no_match` and records the query.
 **Fallback:** Non-model keyword search over catalogue names and aliases, with the same no-invention rule.
@@ -66,7 +66,7 @@ When the model is unsure, it asks or declines. It does not guess a payee, an amo
 
 ## Model version and fallback
 
-**Pinned version:** The model and version against which the quality bar is measured is fixed at build time and recorded here when selected.
+**Pinned version:** The primary provider is Google Gemini 3.1 Pro, with a lower-cost Gemini flash path used for high-volume intent resolution. The exact provider model ID for each path is fixed at build time and recorded here when selected, and the quality bar is measured against the pinned build.
 **Upgrade policy:** A version change requires a full evaluation run against every bar above; a capability that falls below threshold does not ship until it is retrained, re-prompted, or the version is rolled back.
 **Provider failure:** When the provider is unavailable, the product degrades to keyword and search resolution with mandatory confirmation, and payment execution pauses rather than proceeding without grounding.
 **Deprecation:** When the pinned model is retired, the replacement is evaluated against the same datasets before cutover, and the fallback path remains available until the new model clears every bar.

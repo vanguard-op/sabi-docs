@@ -2,7 +2,7 @@
 
 ## Overview
 
-The model is flat and referential, targeting a relational primary database with a separate relational store for payment records. Entities are joined by foreign-key scalars rather than nested objects, and each entity maps cleanly onto tables. Personal data fields carry an `x-personal-data` annotation so the retention and deletion rules in [nfr](nfr.md) can locate them. One deliberate denormalization exists: the payment record stores the amount, currency, and payee at execution time so a receipt never changes if a catalogue entry is later edited. Payment events record each state change append-only for the case timeline and audit trail, and payment methods store only a masked identifier and an optional processor token, never a full account or card number.
+The model is flat and referential, targeting a relational primary database with a separate relational store for payment records. Entities are joined by foreign-key scalars rather than nested objects, and each entity maps cleanly onto tables. All monetary amounts are integer minor units (kobo for NGN), not decimal major units, and each amount field is paired with a `currency` field that gives the currency; integer minor units keep every amount exact and remove floating-point rounding error from a payment. Personal data fields carry an `x-personal-data` annotation so the retention and deletion rules in [nfr](nfr.md) can locate them. One deliberate denormalization exists: the payment record stores the amount, currency, and payee at execution time so a receipt never changes if a catalogue entry is later edited. Payment events record each state change append-only for the case timeline and audit trail, and payment methods store only a masked identifier and an optional processor token, never a full account or card number.
 
 ## Entities
 
@@ -114,7 +114,7 @@ The model is flat and referential, targeting a relational primary database with 
     "aliases": { "type": "array", "items": { "type": "string" }, "description": "Alternative and former names used in search." },
     "providerId": { "type": ["string", "null"], "description": "References the Provider that fulfils payments for this service." },
     "capabilityId": { "type": ["string", "null"], "description": "References the Capability used to pay this service." },
-    "knownAmount": { "type": ["number", "null"], "description": "Amount when the source provides one; null when confirmed at payment." },
+    "knownAmount": { "type": ["integer", "null"], "minimum": 0, "description": "Amount in minor units (kobo for NGN) when the source provides one; null when confirmed at payment. The currency field gives the currency." },
     "currency": { "type": "string", "description": "Currency code.", "default": "NGN" },
     "status": { "type": "string", "enum": ["active", "unavailable", "retired"], "description": "Availability state." },
     "refreshedAt": { "type": ["string", "null"], "format": "date-time", "description": "When the record was last refreshed from source." },
@@ -162,7 +162,7 @@ The model is flat and referential, targeting a relational primary database with 
     "inputSchemaRef": { "type": "string", "description": "Reference to the schema describing required inputs." },
     "amountSource": { "type": "string", "enum": ["fixed", "user_entered", "provider_query"], "description": "How the amount is determined." },
     "billable": { "type": "boolean", "description": "Whether the provider charges for using this capability." },
-    "priceAmount": { "type": ["number", "null"], "description": "Charge per use when billable; null otherwise." },
+    "priceAmount": { "type": ["integer", "null"], "minimum": 0, "description": "Charge per use in minor units (kobo for NGN) when billable; null otherwise. The priceCurrency field gives the currency." },
     "priceCurrency": { "type": ["string", "null"], "description": "Currency of the charge." },
     "schemaVersion": { "type": "string", "description": "Version of the capability input schema." },
     "healthStatus": { "type": "string", "enum": ["healthy", "degraded", "unavailable"], "description": "Latest health result." },
@@ -186,7 +186,7 @@ The model is flat and referential, targeting a relational primary database with 
     "id": { "type": "string", "description": "Stable identifier for the mandate." },
     "userId": { "type": "string", "description": "References the User who authorised the payment." },
     "capabilityId": { "type": ["string", "null"], "description": "References the Capability being paid, when used." },
-    "amount": { "type": "number", "description": "Authorised amount.", "minimum": 0 },
+    "amount": { "type": "integer", "description": "Authorised amount in minor units (kobo for NGN). The currency field gives the currency.", "minimum": 0 },
     "currency": { "type": "string", "description": "Currency code.", "default": "NGN" },
     "payee": { "type": "string", "description": "Authorised payee." },
     "payeeReference": { "type": ["string", "null"], "description": "Payee reference, such as an obligation number." },
@@ -240,7 +240,7 @@ The model is flat and referential, targeting a relational primary database with 
     "mandateId": { "type": "string", "description": "References the PaymentMandate authorising this payment." },
     "paymentMethodId": { "type": ["string", "null"], "description": "References the PaymentMethod that funded the payment; null when settled from a channel without a stored method." },
     "type": { "type": "string", "enum": ["government", "bill"], "description": "Payment category." },
-    "amount": { "type": "number", "description": "Amount paid, stored at execution time.", "minimum": 0 },
+    "amount": { "type": "integer", "description": "Amount paid in minor units (kobo for NGN), stored at execution time. The currency field gives the currency.", "minimum": 0 },
     "currency": { "type": "string", "description": "Currency code.", "default": "NGN" },
     "payee": { "type": "string", "description": "Payee as authorised, stored at execution time so a receipt never changes if a catalogue entry is later edited." },
     "channel": { "type": "string", "enum": ["app", "ussd", "sms", "whatsapp"], "description": "Channel the payment was made from." },
@@ -362,7 +362,7 @@ The model is flat and referential, targeting a relational primary database with 
     "id": { "type": "string", "description": "Stable identifier for the pool." },
     "ownerId": { "type": "string", "description": "References the User who created the pool." },
     "serviceId": { "type": "string", "description": "References the Service the pool pays." },
-    "targetAmount": { "type": "number", "description": "Amount needed to pay the obligation.", "minimum": 0 },
+    "targetAmount": { "type": "integer", "description": "Amount needed to pay the obligation, in minor units (kobo for NGN). The currency field gives the currency.", "minimum": 0 },
     "currency": { "type": "string", "description": "Currency code.", "default": "NGN" },
     "status": { "type": "string", "enum": ["open", "funded", "paid", "refunded", "closed"], "description": "Pool state." },
     "closesAt": { "type": ["string", "null"], "format": "date-time", "description": "Deadline for contributions; null if open-ended." },
@@ -385,7 +385,7 @@ The model is flat and referential, targeting a relational primary database with 
     "id": { "type": "string", "description": "Stable identifier for the contribution." },
     "poolId": { "type": "string", "description": "References the Pool being funded." },
     "contributorId": { "type": "string", "description": "References the User who contributed." },
-    "amount": { "type": "number", "description": "Amount contributed.", "minimum": 0 },
+    "amount": { "type": "integer", "description": "Amount contributed in minor units (kobo for NGN). The currency field gives the currency.", "minimum": 0 },
     "currency": { "type": "string", "description": "Currency code.", "default": "NGN" },
     "status": { "type": "string", "enum": ["pledged", "paid", "reversed"], "description": "Contribution state." },
     "paymentId": { "type": ["string", "null"], "description": "References the Payment that settled this contribution, when paid." },

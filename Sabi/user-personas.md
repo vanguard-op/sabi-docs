@@ -144,21 +144,21 @@ Tunde's mother calls about a disconnection notice. He wants to pay the biller, n
 **Goal:** Confirm that collections reach the designated treasury account with no deductions and that every receipt is genuine.
 **Needs from the system:** reconciliation by reference, no point-of-collection deduction, tamper-evident receipt records, and exception reporting.
 **Research basis:** [Arise News](https://www.arise.tv/nigeria-bans-cash-payments-for-all-government-revenues-to-boost-transparency/) and [Businessday](https://businessday.ng/news/article/fg-rolls-out-unified-revenue-platform-in-biggest-overhaul-since-tsa/) on the cashless collection and FTeR rules.
-**Feeds:** [nfr](nfr.md) for integrity controls, and the deferred operations document.
+**Feeds:** [nfr](nfr.md) for integrity controls, and [operations](operations.md) for reconciliation and exception reporting.
 
 ### Stakeholder 2: Chidinma, compliance and privacy officer
 **Role:** Data protection and compliance lead inside Sabi or its licensed partner.
 **Goal:** Keep personal data processing lawful and auditable and handle data subject requests on time.
 **Needs from the system:** consent capture and withdrawal, access and deletion handling, audit logging, and compliant cross-border transfer rules.
 **Research basis:** [Nigeria Data Protection Act 2023](https://ncc.gov.ng/sites/default/files/2024-11/Nigeria_Data_Protection_Act_2023.pdf) and [Templars](https://www.templars-law.com/app/uploads/2023/11/Navigating-the-Enforcement-Framework-under-the-Data-Protection-Act-2023.pdf) on enforcement and penalties up to N10,000,000 or 2% of annual gross revenue.
-**Feeds:** [nfr](nfr.md) for privacy controls, and the deferred operations document.
+**Feeds:** [nfr](nfr.md) for privacy controls, and [operations](operations.md) for audit review and data subject handling.
 
 ### Stakeholder 3: Emeka, support operations agent
 **Role:** Front-line support for failed payments, reversals, and receipt disputes.
 **Goal:** Resolve a failed payment or produce a receipt without escalating to the payment partner for every case.
 **Needs from the system:** a case queue keyed by reference, transaction status history, reversal and refund workflow, and clear escalation paths.
 **Research basis:** [FIJ](https://fij.ng/article/opay-palmpay-keep-publisher-waiting-11-months-after-he-flagged-n480000-taken-by-fraudsters/) and [Business Times](https://businesstimes.ng/2026/07/15/opay-under-fire-over-alleged-146000-pending-transfers/) on unresolved reversals and pending transfers.
-**Feeds:** the deferred operations document.
+**Feeds:** [operations](operations.md) for the case queue and escalation path.
 
 ## Anti-personas
 

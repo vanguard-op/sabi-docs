@@ -140,4 +140,5 @@ These users are chosen because the payment obligation is non-optional and recurr
 | [user-flow](user-flow.md) | How users move through the product |
 | [screens](screens.md) + `screens/` | Every screen, its states, and its components |
 | [schema](schema.md) | The data model |
+| [operations](operations.md) | The support model, provider review, and operations workflows |
 | [model-quality](model-quality.md) | The model behavior and quality contract |

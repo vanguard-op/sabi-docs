@@ -83,7 +83,7 @@ Verifies identity against the national identity infrastructure (NIN, with BVN wh
 As a user, I want to describe what I need to pay in my own words, so that I do not have to learn a menu structure or a portal.
 
 **Description:**
-Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into a structured intent with the target, the amount if stated, and any constraints. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. Output contract: structured JSON with intent type, target candidate list, amount, currency, and confidence; the client renders a confirmation from this structure, not from raw text. Fallback: when confidence is below threshold, Sabi asks one clarifying question with the closest candidates, and if it still cannot resolve, it says so and offers search or human support rather than guessing.
+Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into a structured intent with the target, the amount if stated, and any constraints. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. Output contract: structured JSON with intent type, target candidate list, amount in minor units, currency, and confidence; the client renders a confirmation from this structure, not from raw text. Fallback: when confidence is below threshold, Sabi asks one clarifying question with the closest candidates, and if it still cannot resolve, it says so and offers search or human support rather than guessing.
 
 **Acceptance criteria:**
 - **Given** a Pidgin request such as "I wan pay my electricity"
@@ -111,7 +111,7 @@ Interprets a free-form request (for example, "pay my land use charge" or "buy fi
 As a user, I want to search for the right agency, levy, or biller and see what I owe, so that I pay the correct place the first time.
 
 **Description:**
-Resolves a query to a real agency, obligation, or biller from a maintained catalogue, and shows what is known about the obligation (amount where an agency or biller provides it, reference, deadline). Search accepts text, and results show the collecting body and any charge. This serves Ngozi, Ifeoma, and Tunde. Output contract: a ranked list of structured service records with identifiers, collecting body, and known amount; the client renders selectable results. Fallback: when the catalogue has no match, Sabi says the service is not yet covered and records the request rather than fabricating a result.
+Resolves a query to a real agency, obligation, or biller from a maintained catalogue, and shows what is known about the obligation (amount where an agency or biller provides it, reference, deadline). Search accepts text, and results show the collecting body and any charge. This serves Ngozi, Ifeoma, and Tunde. Output contract: a ranked list of structured service records with identifiers, collecting body, and known amount in minor units; the client renders selectable results. Fallback: when the catalogue has no match, Sabi says the service is not yet covered and records the request rather than fabricating a result.
 
 **Acceptance criteria:**
 - **Given** a query "council levy Onitsha"

@@ -13,7 +13,7 @@
 | 7 | Pay from abroad and share proof | Tunde | Home | Biller settled in Naira; receipt shared with beneficiary | FEAT-015, FEAT-005, FEAT-008 |
 | 8 | Reach Sabi on WhatsApp | Ngozi | WhatsApp message to the Sabi number | Payment completed and receipt delivered in the chat | FEAT-013 |
 
-These flows serve P0 and reach features. Provider registration (FEAT-012) and third-party receipt verification (FEAT-017) are deliberately not charted here: their actors are providers and businesses, and they depend on the operations document.
+These flows serve P0 and reach features. Provider registration (FEAT-012) and third-party receipt verification (FEAT-017) are deliberately not charted here: their actors are providers and businesses, and they depend on [operations](operations.md).
 
 ## Canonical Vocabulary
 
