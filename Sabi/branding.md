@@ -67,7 +67,7 @@ Generate all nine shades (100–900); the five above are the anchors. Hover and 
 | `grey-100` | `#EEEFE8` | `#202219` | Secondary surfaces, input backgrounds |
 | `grey-50` | `#FAF8F4` | `#17181A` | Page background |
 
-Greys are tinted warm toward the brand's off-white rather than left neutral. Structural roles keep their names and inherit the source shade's light and dark values as one token: `surface` = `grey-50`, `surface-secondary` = `grey-100`, `text-primary` = `grey-900`, `text-secondary` = `grey-600`, `border` = `grey-300`. `on-primary` is a role token for text and icons on a primary fill: `#FFFFFF` light, `#0A2E22` dark.
+Greys are tinted warm toward the brand's off-white rather than left neutral. Structural roles keep their names and inherit the source shade's light and dark values as one token: `surface` = `grey-50`, `surface-secondary` = `grey-100`, `text-primary` = `grey-900`, `text-secondary` = `grey-600`, `border` = `grey-300`. `on-primary` is a role token for text and icons on a primary fill: `#FFFFFF` light, `#0A2E22` dark. `on-error` is the equivalent role token on an error fill: `#FFFFFF` light, `#17181A` dark.
 
 #### Accent & Semantic Colors — 5-shade scales
 Generate a 5-shade scale (100/300/500/700/900) for each state and the accent. The 500 shade is the element colour, the 100 shade tints its background, the 900 shade is its text. `success` is a brighter green than `primary` so brand and state never read as the same signal.
@@ -149,7 +149,7 @@ Buttons follow an action pyramid: one true primary action per surface, a few sec
 | Secondary | `primary-100` | `primary-700` | none | `radius-md` | `button-height` | 16px 24px |
 | Outline | transparent | `primary-500` | 1.5px `primary-500` | `radius-md` | `button-height` | 16px 24px |
 | Ghost | transparent | `text-secondary` | none | `radius-md` | `button-height` | 16px 24px |
-| Destructive | `error-500` | `#FFFFFF` | none | `radius-md` | `button-height` | 16px 24px |
+| Destructive | `error-500` | `on-error` | none | `radius-md` | `button-height` | 16px 24px |
 
 | Input state | Border | Background | Text |
 |---|---|---|---|
@@ -187,7 +187,7 @@ The visual interface is the mobile application. Send and receive channels (USSD/
 
 **Target:** WCAG 2.2 Level AA
 
-- **Contrast ratios:** All text meets WCAG AA minimum (4.5:1 normal, 3:1 large). Dark-mode values are checked independently of light mode.
+- **Contrast ratios:** All text meets WCAG AA minimum (4.5:1 normal, 3:1 large). Dark-mode values are checked independently of light mode; the `on-error` role token keeps destructive-button text legible on the dark-mode `error-500` fill.
 - **Preferred accessible colour:** Dark text on a light tinted surface over white text on a dark colour; for secondary text on a coloured panel, rotate the hue toward a brighter colour rather than pushing toward white.
 - **Touch targets:** Interactive elements are a minimum 44×44px.
 - **Focus indicators:** Visible focus ring on all interactive elements (2px `primary-500` outline, 2px offset).

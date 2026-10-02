@@ -19,7 +19,7 @@ This document defines the behavior and quality contract for the model-backed cap
 
 **Output:** Structured object with fields: `intent_type` (one of `gov_payment`, `bill_payment`, `discovery`, `status_check`, `receipt_lookup`, `unknown`), `target` (a catalogue service identifier or null), `amount` (integer minor units in `currency`, or null), `currency` (default `NGN`), `reference` (string or null), `constraints` (object), `confidence` (0 to 1), `language`, and `clarifying_question` (string or null). Amounts are integer minor units (kobo for NGN), never decimal major units, and `currency` gives the currency.
 **Reproducibility:** Model version and decoding settings pinned for evaluation; structure is fixed, phrasing of clarifications may vary.
-**Refusal:** If `confidence` is below the threshold in the quality bar, the model must ask exactly one clarifying question and must not set `intent_type` to a payment type. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
+**Refusal:** If `confidence` is below the cutoff of **0.70**, the model must ask exactly one clarifying question and must not set `intent_type` to a payment type. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
 **Fallback:** When the model is unavailable or returns unusable output, the client resolves the request through keyword and search over the catalogue and requires explicit confirmation before any payment.
 
 ### MQ-002: Discovery ranking
@@ -56,6 +56,8 @@ Each capability with a judged output carries a measured bar. A threshold applies
 
 A payment capability is held to a higher bar than a discovery capability because a wrong intent moves money to the wrong place. MQ-001 carries the highest threshold for that reason. Each bar has a stated growth path of one point per quarter until it reaches 0.97, pending dataset expansion.
 
+Separately from the accuracy bars above, MQ-001 applies a serving confidence cutoff of **0.70**: below it the model asks exactly one clarifying question and does not resolve a payment intent (see the MQ-001 Refusal rule).
+
 ## Grounding, safety, and refusal behavior
 
 Facts about agencies, billers, amounts, references, and receipts must come from the catalogue or the payment source, never from model memory. The model must not emit an amount, a reference number, or a service identifier that is not present in retrieved data. Where an answer depends on retrieved content, the answer cites the source record.
@@ -66,7 +68,7 @@ When the model is unsure, it asks or declines. It does not guess a payee, an amo
 
 ## Model version and fallback
 
-**Pinned version:** The primary provider is Google Gemini 3.1 Pro, with a lower-cost Gemini flash path used for high-volume intent resolution. The exact provider model ID for each path is fixed at build time and recorded here when selected, and the quality bar is measured against the pinned build.
+**Pinned version:** The primary path is `gemini-3.1-pro-preview`, and high-volume intent resolution uses the lower-cost `gemini-3-flash-preview`. Decoding is pinned per capability: temperature `0.0` and top_p `1.0`. The quality bar is measured against this pinned build. The primary is a preview model, so the deprecation policy below applies to it.
 **Upgrade policy:** A version change requires a full evaluation run against every bar above; a capability that falls below threshold does not ship until it is retrained, re-prompted, or the version is rolled back.
 **Provider failure:** When the provider is unavailable, the product degrades to keyword and search resolution with mandatory confirmation, and payment execution pauses rather than proceeding without grounding.
 **Deprecation:** When the pinned model is retired, the replacement is evaluated against the same datasets before cutover, and the fallback path remains available until the new model clears every bar.
