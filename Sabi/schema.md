@@ -319,6 +319,7 @@ The model is flat and referential, targeting a relational primary database with 
     "kind": { "type": "string", "enum": ["official_e_receipt", "biller_confirmation", "token"], "description": "Kind of proof." },
     "receiptNumber": { "type": ["string", "null"], "description": "Official receipt identifier, such as the FTeR number." },
     "verificationStatus": { "type": "string", "enum": ["verified", "unverified", "pending"], "description": "Whether the receipt was confirmed against its source." },
+    "unverifiedReason": { "type": ["string", "null"], "description": "Plain reason the receipt is unverified, such as source unavailable or identifier not found; null when verified or pending." },
     "documentRef": { "type": "string", "description": "Reference to the stored document." },
     "issuedAt": { "type": ["string", "null"], "format": "date-time", "description": "When the source issued the receipt." },
     "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." }

@@ -32,7 +32,7 @@
 
 **Data Needed:**
 - Receipt record: reference, amount, payee, timestamp, kind, official identifier — from receipt records
-- Verification status against the source — from the receipt service
+- Verification status against the source and, when unverified, the plain reason (`Receipt.unverifiedReason` in [schema](../schema.md)) — from the receipt service
 
 **Data Flow:**
 1. Screen mounts → show the receipt.
@@ -48,7 +48,7 @@
 | **Loaded** | Receipt available | Full record and actions |
 | **Awaiting receipt** | Payment succeeded, official identifier pending | Awaiting pill and a note that Sabi is still checking |
 | **Verified** | Official identifier confirmed | Verified line with the identifier |
-| **Unverified** | Source cannot confirm | Unverified line with the reason |
+| **Unverified** | Source cannot confirm | Unverified line with the reason (`Receipt.unverifiedReason` in [schema](../schema.md)) |
 | **Error** | Fetch failed | Error state with "Try again" |
 
 **Edge Cases:**

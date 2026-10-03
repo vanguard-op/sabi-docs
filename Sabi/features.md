@@ -267,7 +267,7 @@ Stores a receipt for every completed payment with its reference, amount, payee, 
   **Then** the identifier is shown and marked as verified against the source.
 
 **Edge cases and failure states:**
-- Source receipt cannot be verified: mark the receipt as unverified and state why.
+- Source receipt cannot be verified: mark the receipt as unverified, set `Receipt.unverifiedReason` in [schema](schema.md) to the plain reason, and state why.
 - Receipt storage failure: queue for retry and warn the user not to discard the transaction reference.
 - A receipt is disputed: preserve the original and record the dispute without altering it.
 
