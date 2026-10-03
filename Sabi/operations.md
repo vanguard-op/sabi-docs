@@ -183,7 +183,7 @@ The audit log covers authentication, authorisation, and privileged actions, and 
 
 ## Operations Console surface scope
 
-The Operations Console is the staff and provider surface described in [architecture](architecture.md). It is not a screen of the mobile product and is not one of the nine screens in [screens](screens.md); it does not appear in the screen inventory or the navigation map. Users reach operations only through the existing user surfaces: the [Case screen](screens/08-case.md), the receipt dispute action on [Receipt Detail](screens/07-receipt-detail.md), and the reachable support channels. The console is never exposed to end users.
+The Operations Console is the staff and provider surface described in [architecture](architecture.md). It is not a screen of the mobile product and is not one of the nine screens in [screens](screens.md); it does not appear in the screen inventory or the navigation map. Users reach operations only through the existing user surfaces: the [Case screen](screens/08-case.md), the receipt dispute action on [Receipt Detail](screens/07-receipt-detail.md), and the reachable support channels. The console is never exposed to end users. The console surface itself, its Phase 1 views, its staff login, and its hosting position are specified in [operations-console](operations-console.md).
 
 | Phase | Console surface |
 |---|---|
@@ -192,7 +192,7 @@ The Operations Console is the staff and provider surface described in [architect
 | Phase 3 | Third-party verification request handling and abuse review |
 | Phase 4 | Provider marketplace operations |
 
-Access to the console requires MFA and an assigned role, and every action is logged (NFR-020 and NFR-028 in [nfr](nfr.md)).
+Access to the console requires MFA and an assigned role, and every action is logged (NFR-020 and NFR-028 in [nfr](nfr.md)). The console is a desktop, pointer-and-keyboard web surface, and the design system in [branding](branding.md) is mobile-only: it specifies no desktop, pointer, hover, or wide-viewport target, so a desktop token set does not yet exist. That gap is recorded in [operations-console](operations-console.md) and flagged in [branding](branding.md); the console has no approved visual token set until it is closed.
 
 ## Incident and escalation
 

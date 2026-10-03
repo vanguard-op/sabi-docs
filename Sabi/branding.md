@@ -170,6 +170,8 @@ The visual interface is the mobile application. Send and receive channels (USSD/
 **Input modalities:** Touch primary; on-screen keyboard for text entry. No pointer, hover, or desktop targets.
 **Breakpoints:** 600px and 1024px only.
 
+**Desktop and staff console, out of scope here.** This design system is mobile-only. The Phase 1 Operations Console specified in [operations-console](operations-console.md) is a desktop, pointer-and-keyboard web surface, and it is outside the device targets above. This system provides it no desktop token set, no pointer or hover states, and no wide-viewport layout. That is a recorded tension, not a covered case: the console needs its own token decisions before build, and this document does not design them. Until then, the console has no sanctioned visual token set, and reusing the mobile tokens by analogy is not approved.
+
 ### Internationalization & Localization
 
 | Aspect | Decision |
