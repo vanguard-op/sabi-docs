@@ -53,6 +53,8 @@ Self-serve first: coverage requests, payment status, receipt retrieval, refund t
 
 ## Operator roles and access control
 
+The roles below are the source of truth for who may act; the console surface that enforces them, including the staff login, is specified in "Staff authentication" in [operations-console](operations-console.md).
+
 | Role | Can view | Can change | Approval required for |
 |---|---|---|---|
 | Provider review analyst | Submitted capabilities, schemas, health results, provider contacts | Capability review state and the approve or reject decision | Activating a capability that claims a service another provider already holds |
@@ -174,7 +176,7 @@ This workflow arrives with the payment loop and federal payments in Phase 2. Dai
 
 ## Privileged-action and audit-log review
 
-The audit log covers authentication, authorisation, and privileged actions, and is tamper-evident (NFR-028 in [nfr](nfr.md)).
+The audit log covers authentication, authorisation, and privileged actions, and is tamper-evident (NFR-028 in [nfr](nfr.md)). The review surface the compliance and privacy officer works in is specified in "Privileged-action audit view" in [operations-console](operations-console.md); this section owns the review rules.
 
 - Automated alerts fire on high-risk actions, including a role grant, break-glass access, a capability quarantine, a refund above the limit, and a bulk data export.
 - A weekly review of privileged actions is performed by the compliance and privacy officer. A monthly completeness check confirms that every action in the operator surfaces has a matching audit entry.

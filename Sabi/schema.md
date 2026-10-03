@@ -2,7 +2,7 @@
 
 ## Overview
 
-The model is flat and referential, targeting a relational primary database with a separate relational store for payment records. Entities are joined by foreign-key scalars rather than nested objects, and each entity maps cleanly onto tables. All monetary amounts are integer minor units (kobo for NGN), not decimal major units, and each amount field is paired with a `currency` field that gives the currency; integer minor units keep every amount exact and remove floating-point rounding error from a payment. Personal data fields carry an `x-personal-data` annotation so the retention and deletion rules in [nfr](nfr.md) can locate them. One deliberate denormalization exists: the payment record stores the amount, currency, and payee at execution time so a receipt never changes if a catalogue entry is later edited. Payment events record each state change append-only for the case timeline and audit trail, and payment methods store only a masked identifier and an optional processor token, never a full account or card number.
+The model is flat and referential, targeting a relational primary database with a separate relational store for payment records. Entities are joined by foreign-key scalars rather than nested objects, and each entity maps cleanly onto tables. All monetary amounts are integer minor units (kobo for NGN), not decimal major units, and each amount field is paired with a `currency` field that gives the currency; integer minor units keep every amount exact and remove floating-point rounding error from a payment. Personal data fields carry an `x-personal-data` annotation so the retention and deletion rules in [nfr](nfr.md) can locate them. One deliberate denormalization exists: the payment record stores the amount, currency, and payee at execution time so a receipt never changes if a catalogue entry is later edited. Payment events record each state change append-only for the case timeline and audit trail, and payment methods store only a masked identifier and an optional processor token, never a full account or card number. Three entities belong to the Operations Console rather than the catalogue or the payment loop: `StaffAccount` is an operator account, and `ComplianceFinding` and `AuditExport` are the review state on top of the append-only audit log specified in [operations-console](operations-console.md). The audit timeline itself stays in the tamper-evident audit log; the console entities hold only the state its review workflow adds to it.
 
 ## Entities
 
@@ -468,6 +468,80 @@ The model is flat and referential, targeting a relational primary database with 
 }
 ```
 
+### StaffAccount
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/staff-account.schema.json",
+  "title": "StaffAccount",
+  "description": "An operator account for the Operations Console. Each staff member has their own row, one role, and their own second factor; there are no shared operator accounts.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the staff account." },
+    "email": { "type": "string", "format": "email", "description": "Login identifier, stored lower-cased so a case variation does not create a second account.", "maxLength": 254, "x-personal-data": true },
+    "passwordHash": { "type": "string", "description": "One-way Argon2id hash of the password with a server-side pepper; never returned and never written to a log.", "x-personal-data": true },
+    "totpSecret": { "type": ["string", "null"], "description": "Base32 RFC 4648 seed for the TOTP second factor. A secret that must be decryptable to verify codes, so it is encrypted at rest rather than hashed; null until an administrator has enrolled the factor; never returned and never written to a log.", "x-personal-data": true },
+    "role": { "type": "string", "description": "Operator role, from the roles defined in [operations](operations.md)." },
+    "status": { "type": "string", "enum": ["active", "locked", "disabled"], "description": "Account lifecycle state: active, held by policy, or revoked." },
+    "failedAttempts": { "type": "integer", "description": "Consecutive failed sign-in attempts, reset on success.", "minimum": 0 },
+    "lockedUntil": { "type": ["string", "null"], "format": "date-time", "description": "When a lockout cooling-off ends; null when not locked." },
+    "lastLoginAt": { "type": ["string", "null"], "format": "date-time", "description": "When the account last signed in; null before first sign-in." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." },
+    "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time (UTC)." }
+  },
+  "required": ["id", "email", "passwordHash", "role", "status", "failedAttempts", "createdAt", "updatedAt"]
+}
+```
+
+### ComplianceFinding
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/compliance-finding.schema.json",
+  "title": "ComplianceFinding",
+  "description": "One completeness review over the append-only audit log: an action suspected of having no audit entry. It starts open and can be closed once with a resolution.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the finding." },
+    "target": { "type": "string", "description": "The privileged action or actor the review is about, as it appears in the log's target or actor field; opaque, never personal data.", "maxLength": 255 },
+    "blockedRole": { "type": ["string", "null"], "description": "The role whose further privileged actions are blocked until the gap is corrected; null when no role is blocked." },
+    "summary": { "type": ["string", "null"], "description": "Short statement of the suspected gap." },
+    "status": { "type": "string", "enum": ["open", "closed"], "description": "Finding state." },
+    "openedAt": { "type": "string", "format": "date-time", "description": "When the review was opened (UTC)." },
+    "closedBy": { "type": ["string", "null"], "description": "References the StaffAccount that closed the finding; null while open." },
+    "resolution": { "type": ["string", "null"], "description": "Resolution text recorded when the finding is closed; null while open." },
+    "closedAt": { "type": ["string", "null"], "format": "date-time", "description": "When the finding was closed; null while open." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." }
+  },
+  "required": ["id", "target", "status", "openedAt", "createdAt"]
+}
+```
+
+### AuditExport
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/audit-export.schema.json",
+  "title": "AuditExport",
+  "description": "A queued audit extract. The request is itself a privileged action and is logged; the row tracks the queued job. The extract itself is produced by the export worker and is not held here, so no bulk personal data sits in the primary store.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the export job." },
+    "requestedBy": { "type": "string", "description": "References the StaffAccount that requested the extract." },
+    "rangeFrom": { "type": "string", "format": "date-time", "description": "Start of the requested window (UTC), inclusive." },
+    "rangeTo": { "type": "string", "format": "date-time", "description": "End of the requested window (UTC), inclusive; the request is rejected when it is before the start." },
+    "format": { "type": "string", "enum": ["csv", "json"], "description": "Requested extract format." },
+    "status": { "type": "string", "enum": ["queued", "running", "done", "failed"], "description": "Export job state." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." },
+    "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time (UTC)." }
+  },
+  "required": ["id", "requestedBy", "rangeFrom", "rangeTo", "format", "status", "createdAt", "updatedAt"]
+}
+```
+
 ## Relationships
 
 - **AuthCredential** `userId` references **User**, each credential belongs to exactly one user.
@@ -500,7 +574,9 @@ The model is flat and referential, targeting a relational primary database with 
 - **Contribution** `contributorId` references **User**, each contribution is made by exactly one user.
 - **Contribution** `paymentId` references **Payment**, a contribution is settled by at most one payment.
 - **Notification** `userId` references **User**, each notification targets exactly one user.
+- **ComplianceFinding** `closedBy` references **StaffAccount**, a finding is closed by at most one staff account.
+- **AuditExport** `requestedBy` references **StaffAccount**, each export is requested by exactly one staff account.
 
 ## Personal data
 
-Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, and `Provider.contactEmail`. `AuthCredential.credentialId` and `AuthCredential.lookupDigest` are non-secret identifiers and carry no `x-personal-data` annotation. Analytics events reference `User.id` only and never these fields.
+Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, `Provider.contactEmail`, `StaffAccount.email`, `StaffAccount.passwordHash`, and `StaffAccount.totpSecret`. `AuthCredential.credentialId` and `AuthCredential.lookupDigest` are non-secret identifiers and carry no `x-personal-data` annotation. `StaffAccount.passwordHash` is one-way and `StaffAccount.totpSecret` is a secret that is encrypted at rest and never returned, because it must be decryptable to verify codes; both are staff personal data, never written to a log, and never returned on the wire. `ComplianceFinding.target` is opaque and carries no `x-personal-data` annotation, and no personal data is copied into a finding row. Analytics events reference `User.id` only and never these fields.

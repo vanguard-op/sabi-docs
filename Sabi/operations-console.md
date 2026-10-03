@@ -44,7 +44,7 @@ A role sees only the surfaces its workflow needs, per the least-privilege contro
 
 ## Staff authentication
 
-This is an interface requirement, not a frozen contract. Staff authentication is a dedicated web login using email, password, and a time-based one-time password (TOTP), under multi-factor authentication. It is a new staff-auth surface, distinct from the end-user passkey flow in FEAT-001 and from the C-001 to C-008 account contracts.
+Staff authentication is a dedicated web login using email, password, and a time-based one-time password (TOTP), under multi-factor authentication, carried by the frozen staff-auth contracts C-039 `POST /v1/staff/auth/login` and C-040 `POST /v1/staff/auth/logout` in `CONTRACTS.md`. It is a new staff-auth surface, distinct from the end-user passkey flow in FEAT-001 and from the C-001 to C-008 account contracts. The access-control rules this surface enforces are owned by "Operator roles and access control" in [operations](operations.md); this section owns only the login surface.
 
 | Aspect | Requirement |
 |---|---|
@@ -56,11 +56,11 @@ This is an interface requirement, not a frozen contract. Staff authentication is
 | Audit | Authentication, authorisation, and every privileged action are logged tamper-evidently (NFR-028 in [nfr](nfr.md)) |
 | Recovery | A lost second factor is re-enrolled through the administrator role, not by an operator self-service path |
 
-Assumption: the staff-auth endpoints are new and are not yet numbered in `CONTRACTS.md`. They are stated here as interface requirements so the build team can raise them as contracts before implementation. This document does not freeze their request or response shapes.
+Assumption: the staff-auth endpoints are frozen as C-039 `POST /v1/staff/auth/login` and C-040 `POST /v1/staff/auth/logout` in `CONTRACTS.md`, distinct from the end-user account contracts C-001 to C-008. They are frozen but not yet implemented; this document states the interface requirement and the contract holds the request and response shapes.
 
 ## Phase 1 views
 
-Each view below states its purpose, the states it presents, the permitted role, the actions it offers, and the contract endpoint each action uses. Endpoints C-013 to C-016 are the provider registry surface defined in `CONTRACTS.md` and specified for FEAT-012 in [features](features.md). An action marked "new endpoint" needs a contract before build.
+Each view below states its purpose, the states it presents, the permitted role, the actions it offers, and the contract endpoint each action uses. Endpoints C-013 to C-016 are the provider registry surface defined in `CONTRACTS.md` and specified for FEAT-012 in [features](features.md). Endpoints C-039 to C-043 are the staff-auth and audit surface frozen in `CONTRACTS.md`, frozen but not yet implemented. An action with no numbered contract is marked "new endpoint" and needs one before build.
 
 ### Provider submission and review (staff-captured)
 
@@ -136,7 +136,7 @@ Existing payment cases continue in the case workflow when a capability is quaran
 
 ### Privileged-action audit view
 
-**Purpose.** Let the compliance and privacy officer review privileged actions and close a finding, and confirm that every action in the operator surfaces has a matching audit entry, per the audit review in [operations](operations.md) and NFR-028 in [nfr](nfr.md).
+**Purpose.** Let the compliance and privacy officer review privileged actions and close a finding, and confirm that every action in the operator surfaces has a matching audit entry, per the "Privileged-action and audit-log review" section in [operations](operations.md) and NFR-028 in [nfr](nfr.md).
 
 **States presented.** The audit timeline (actor, role, target, action, reason, timestamp), the alert state for high-risk actions (role grant, break-glass access, capability quarantine, refund above the limit, bulk data export), and the finding state for a review (open or closed).
 
@@ -146,10 +146,10 @@ Existing payment cases continue in the case workflow when a capability is quaran
 
 | Action | Endpoint | Notes |
 |---|---|---|
-| Read the audit log | New endpoint, read-only over the tamper-evident log | The log is append-only and retained under the data lifecycle in [nfr](nfr.md) |
-| Filter by actor, role, target, or action | New endpoint, query parameters on the audit read | Supports the weekly and monthly reviews in [operations](operations.md) |
-| Close a finding | New endpoint, records the reviewer and the resolution | A finding that finds an unlogged action blocks further privileged action by that role |
-| Export an audit extract | New endpoint, gated to the compliance role | A bulk export is itself a privileged action and is logged |
+| Read the audit log | C-041 `GET /v1/staff/audit` | Read-only over the tamper-evident log; the log is append-only and retained under the data lifecycle in [nfr](nfr.md) |
+| Filter by actor, role, target, or action | C-041 `GET /v1/staff/audit` | Query parameters on the audit read; supports the weekly and monthly reviews in [operations](operations.md) |
+| Close a finding | C-042 `POST /v1/staff/audit/findings/{findingsId}/close` | Records the reviewer and the resolution; a finding that finds an unlogged action blocks further privileged action by that role |
+| Export an audit extract | C-043 `POST /v1/staff/audit/export` | Gated to the compliance role; returns a queued job. A bulk export is itself a privileged action and is logged |
 
 The audit view reads the audit log; it never writes to it. No action in this view can edit or delete a log entry.
 
@@ -163,7 +163,8 @@ graph TD
     Console --> Schema[Capability schema review]
     Console --> Health[Capability health and quarantine]
     Console --> Audit[Privileged-action audit view]
-    Providers --> API[API gateway /v1]
+    Login --> API[API gateway /v1]
+    Providers --> API
     Schema --> API
     Health --> API
     Audit --> API
@@ -171,11 +172,16 @@ graph TD
     API --> C014[C-014 POST /v1/providers/:id/capabilities]
     API --> C015[C-015 GET /v1/capabilities/:id]
     API --> C016[C-016 POST /v1/capabilities/:id/review]
+    API --> C039[C-039 POST /v1/staff/auth/login]
+    API --> C040[C-040 POST /v1/staff/auth/logout]
+    API --> C041[C-041 GET /v1/staff/audit]
+    API --> C042[C-042 POST /v1/staff/audit/findings/:id/close]
+    API --> C043[C-043 POST /v1/staff/audit/export]
     API --> AuthSvc[Identity and auth service]
     API --> PayPhase2[Payment module Phase 2]
 ```
 
-Every Phase 1 view reaches the backend through the API gateway and the C-013 to C-016 endpoints. The payment module node is shown because the audit view reads payment-module audit entries once Phase 2 is live; no Phase 1 console action writes to the payment module.
+Every Phase 1 view reaches the backend through the API gateway: the provider views through the C-013 to C-016 endpoints, and staff login and the audit view through the C-039 to C-043 endpoints. The payment module node is shown because the audit view reads payment-module audit entries once Phase 2 is live; no Phase 1 console action writes to the payment module.
 
 ## Hosting and deployment
 
@@ -215,7 +221,7 @@ The following surfaces are a forward view only. They are not Phase 1 scope and a
 | # | Assumption | Risk if false |
 |---|---|---|
 | OC-A1 | Staff capture of provider submissions is sufficient for Phase 1 provider volume | Provider onboarding is slower than expected and the self-service portal moves into Phase 1 |
-| OC-A2 | The C-013 to C-016 endpoints cover every Phase 1 console action | A Phase 1 action needs a new contract before build, such as the audit read and the manual health re-check |
+| OC-A2 | The C-013 to C-016 and C-039 to C-043 endpoints cover every Phase 1 console action | A Phase 1 action needs a new contract before build, such as the manual health re-check |
 | OC-A3 | The staff-auth endpoints can be added without changing the end-user account contracts | The staff and end-user auth surfaces become coupled and the separation in this document weakens |
 | OC-A4 | The console is built against the Desktop and Staff Console Token Set in [branding](branding.md), so no ad-hoc desktop styling is needed | The console drifts from the brand, or a token not in the sanctioned set is needed and the set is revised before it ships |
 
@@ -224,7 +230,7 @@ The following surfaces are a forward view only. They are not Phase 1 scope and a
 | Check | Method | When |
 |---|---|---|
 | Phase 1 views reachable and role-gated | Access review against the operator roles in [operations](operations.md) | Quarterly |
-| Every console action uses a frozen contract | Contract conformance against C-013 to C-016 and the staff-auth contracts | Each release |
+| Every console action uses a frozen contract | Contract conformance against C-013 to C-016 and C-039 to C-043 | Each release |
 | No end-user exposure | Confirm the console host and routes are unreachable from the mobile client and channels | Pre-launch, then each release |
 | Staff and end-user sessions separate | Session-isolation test, including no impersonation | Pre-launch, annually |
 | Every privileged console action audited | Audit-log completeness check | Monthly |
