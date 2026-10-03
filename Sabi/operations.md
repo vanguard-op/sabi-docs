@@ -192,7 +192,7 @@ The Operations Console is the staff and provider surface described in [architect
 | Phase 3 | Third-party verification request handling and abuse review |
 | Phase 4 | Provider marketplace operations |
 
-Access to the console requires MFA and an assigned role, and every action is logged (NFR-020 and NFR-028 in [nfr](nfr.md)). The console is a desktop, pointer-and-keyboard web surface, and the design system in [branding](branding.md) is mobile-only: it specifies no desktop, pointer, hover, or wide-viewport target, so a desktop token set does not yet exist. That gap is recorded in [operations-console](operations-console.md) and flagged in [branding](branding.md); the console has no approved visual token set until it is closed.
+Access to the console requires MFA and an assigned role, and every action is logged (NFR-020 and NFR-028 in [nfr](nfr.md)). The console is a desktop, pointer-and-keyboard web surface, and its visual token set is settled in the [Desktop and Staff Console Token Set](branding.md#desktop-and-staff-console-token-set) in [branding](branding.md): the console inherits the brand colour, type, spacing, radius, elevation, and component grammar, and adds only the tokens a data-dense desktop layout needs. The mobile device targets in [branding](branding.md) remain mobile-only. The set states a deliberate desktop `control-height` exception, documented against the Accessibility target in [branding](branding.md). The console surface itself is specified in [operations-console](operations-console.md).
 
 ## Incident and escalation
 

@@ -196,7 +196,7 @@ The console is a component in [architecture](architecture.md), the "Operations C
 
 The console is not a screen of the mobile product and is not one of the nine screens in [screens](screens.md). It does not appear in the screen inventory, the navigation map, or a `screens/` spec, and it is never exposed to an end user. Users reach operations only through the user surfaces named in [operations](operations.md): the [Case screen](screens/08-case.md), the receipt dispute action on [Receipt Detail](screens/07-receipt-detail.md), and the reachable support channels. The console is excluded from the nine mobile screens by design.
 
-**Design-system coverage.** The design system in [branding](branding.md) is mobile-only; it states no desktop, pointer, hover, or wide-viewport target. The Phase 1 console therefore has no approved visual token set. This is an acknowledged tension, not a settled design: [branding](branding.md) flags it in its Responsive and Device Targets section, and this document records that the console is out of the design system's device targets. Reusing the mobile tokens by analogy is not a sanctioned substitute; a desktop surface needs its own token decisions before build. This document does not design those tokens.
+**Design-system coverage.** The Phase 1 console is covered by the [Desktop and Staff Console Token Set](branding.md#desktop-and-staff-console-token-set) in [branding](branding.md). The console inherits the brand colour, type, spacing, radius, elevation, and component grammar, and adds only the tokens a data-dense desktop layout needs: the console breakpoints and `content-max` and `shell-min` layout tokens, the desktop density tokens, the data-table tokens, the form-control additions, the desktop interaction states, and the sidebar and navigation tokens. The console reads as Sabi, not a generic admin panel. The set states a deliberate desktop `control-height` exception to the 44px touch minimum, documented against the Accessibility target in [branding](branding.md); touch paths stay at 44px. This document does not restate the token values, it references them. The mobile device targets in [branding](branding.md) remain mobile-only and are not the console's targets.
 
 ## Phase 2 additions, not Phase 1
 
@@ -217,7 +217,7 @@ The following surfaces are a forward view only. They are not Phase 1 scope and a
 | OC-A1 | Staff capture of provider submissions is sufficient for Phase 1 provider volume | Provider onboarding is slower than expected and the self-service portal moves into Phase 1 |
 | OC-A2 | The C-013 to C-016 endpoints cover every Phase 1 console action | A Phase 1 action needs a new contract before build, such as the audit read and the manual health re-check |
 | OC-A3 | The staff-auth endpoints can be added without changing the end-user account contracts | The staff and end-user auth surfaces become coupled and the separation in this document weakens |
-| OC-A4 | A desktop token set can be deferred until the console is built | The console ships on ad-hoc styling and drifts from the brand, or the design work gates the build |
+| OC-A4 | The console is built against the Desktop and Staff Console Token Set in [branding](branding.md), so no ad-hoc desktop styling is needed | The console drifts from the brand, or a token not in the sanctioned set is needed and the set is revised before it ships |
 
 ## Verification
 
@@ -231,4 +231,4 @@ The following surfaces are a forward view only. They are not Phase 1 scope and a
 | Provider review decisions complete | Audit of submissions against the review criteria | Monthly |
 | Capability health and quarantine current | Health-check report and quarantine log | Weekly |
 | Console served from the primary region behind the gateway | Deployment-region and topology check | Each release |
-| Desktop token coverage | Confirm a sanctioned token set exists before the console ships | Pre-launch |
+| Desktop token conformance | Confirm the console's implemented tokens match the Desktop and Staff Console Token Set in [branding](branding.md), including the documented `control-height` exception | Pre-launch, then each release |

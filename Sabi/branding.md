@@ -170,7 +170,111 @@ The visual interface is the mobile application. Send and receive channels (USSD/
 **Input modalities:** Touch primary; on-screen keyboard for text entry. No pointer, hover, or desktop targets.
 **Breakpoints:** 600px and 1024px only.
 
-**Desktop and staff console, out of scope here.** This design system is mobile-only. The Phase 1 Operations Console specified in [operations-console](operations-console.md) is a desktop, pointer-and-keyboard web surface, and it is outside the device targets above. This system provides it no desktop token set, no pointer or hover states, and no wide-viewport layout. That is a recorded tension, not a covered case: the console needs its own token decisions before build, and this document does not design them. Until then, the console has no sanctioned visual token set, and reusing the mobile tokens by analogy is not approved.
+The targets above are the mobile device targets. The Phase 1 Operations Console is a desktop, pointer-and-keyboard surface and is a distinct device target, specified in the [Desktop and Staff Console Token Set](#desktop-and-staff-console-token-set) below. It is not a scaled-up mobile layout, and the mobile tokens are not reused by analogy: the console inherits the brand colour, type, spacing, radius, elevation, and component grammar, and adds only the tokens a data-dense desktop layout needs.
+
+### Desktop and Staff Console Token Set
+
+This subsection extends the design system to the desktop, pointer-and-keyboard Operations Console specified in [operations-console](operations-console.md). It is a device-target extension, not a second design system: the console inherits the brand colour, type, spacing, radius, elevation, and component grammar defined above, and adds only the tokens a data-dense desktop layout needs. Nothing in the token specification below contradicts or replaces a mobile token; where a token is inherited it is named and left unchanged.
+
+**Framing.** The console is staff-facing and is never exposed to an end user, so it does not carry the end-user journey's touch-first constraints. It is used at a desk with a pointer and a keyboard, often for long review sessions on wide viewports, and its layouts are denser than the mobile application: more information per surface, smaller row and control heights, and persistent navigation instead of a bottom bar. The brand still governs the console, so its colour, type, and component grammar are the same as the mobile client's; only the layout, density, and interaction tokens are new.
+
+**Device targets.**
+
+| Device class | Width range | Layout posture |
+|---|---|---|
+| Console small | 1024px `bp-console-sm` | Sidebar collapsed to icons, single content column |
+| Console medium | 1440px `bp-console-md` | Sidebar expanded, content column plus a detail panel |
+| Console large | 1920px `bp-console-lg` | Sidebar expanded, content column plus a detail panel, generous gutters |
+
+`content-max` is 1280px: the content column stops widening past that width and centres, so a table's line length stays readable on a large desktop. `shell-min` is 1024px: below that width the console is not supported, and the smallest console layout is the one at `bp-console-sm`.
+
+**Input modalities:** Pointer and keyboard primary; hover is a real state, and every pointer action has a keyboard equivalent. The console is not a touch surface.
+
+**Inherited from branding.md as-is.** These tokens are the mobile tokens and are used in the console without change.
+
+| Category | Inherited tokens |
+|---|---|
+| Colour | `primary-*`, `grey-*`, `success-*`, `warning-*`, `error-*`, `info-*`, `accent-*`, and the role tokens `surface`, `surface-secondary`, `text-primary`, `text-secondary`, `border`, `on-primary`, `on-error` |
+| Typography | `display`, `h1`, `h2`, `h3`, `body-large`, `body`, `body-small`, `caption`; the `Inter` and `JetBrains Mono` families and their fallbacks |
+| Spacing | `space-xs`, `space-sm`, `space-md`, `space-lg`, `space-xl`, `space-2xl`, `space-3xl` |
+| Radius | `radius-sm`, `radius-md`, `radius-lg`, `radius-full` |
+| Elevation | `shadow-none`, `shadow-sm`, `shadow-md`, `shadow-lg`, `shadow-xl`, and the dark-surface rule that pairs shadow with `border` |
+| Icons | `icon-sm`, `icon-md`, `icon-lg`, and the 24px icon grid |
+| Component grammar | The action pyramid (one primary action per surface), button variants and their colour roles, input states, and the destructive-action rule |
+
+**New tokens: breakpoints and layout.**
+
+| Token | Value | Usage |
+|---|---|---|
+| `bp-console-sm` | 1024px | Smallest supported console width; collapsed sidebar, single content column |
+| `bp-console-md` | 1440px | Expanded sidebar, content column plus detail panel |
+| `bp-console-lg` | 1920px | Wide desktop; expanded sidebar, content column plus detail panel, generous gutters |
+| `content-max` | 1280px | Maximum content-column width; the column centres past this width |
+| `shell-min` | 1024px | Minimum supported console width |
+
+**New tokens: density.** The console is data-dense, so its rows and controls are set to desktop heights rather than the mobile `button-height` and `input-height`. This is the deliberate exception to the mobile touch sizing documented against the Accessibility target below.
+
+| Token | Value | Usage |
+|---|---|---|
+| `row-height` | 40px | Default data-table row |
+| `row-height-compact` | 32px | Compact data-table row for long review lists |
+| `control-height` | 36px | Desktop buttons, inputs, and selects |
+| `cell-pad-x` | 12px | Horizontal cell padding |
+| `cell-pad-y` | 8px | Vertical cell padding |
+
+**New tokens: data table.** The data table is the console's primary surface and has no mobile equivalent. Data tables use the inherited `border` and `surface-secondary` tokens for structure, and the inherited semantic colours for status, always paired with an icon and a text label per the colour-independence rule in the Accessibility section.
+
+| Token | Value | Usage |
+|---|---|---|
+| `table-header-height` | 44px | Column-header row |
+| `table-header-bg` | `surface-secondary` | Column-header background |
+| `table-row-hover-bg` | `primary-100` | Row hover on a pointer surface |
+| `table-row-selected-bg` | `primary-100` | Selected row |
+| `table-row-border` | `border` | Row separator, 1px |
+| `table-zebra-bg` | `surface` | Even-row background where zebra striping is used |
+| `table-sort-indicator` | `primary-500` | Active sort column indicator |
+| `table-density-default` | `row-height` | Default table density |
+| `table-density-compact` | `row-height-compact` | Compact table density |
+
+**New tokens: form controls.** The console reuses the inherited input states (default, focus, error, disabled) and the inherited `radius-md` and `space-sm` padding. It adds only the desktop control height and the pointer states a form needs.
+
+| Token | Value | Usage |
+|---|---|---|
+| `control-height` | 36px | Desktop input, select, and button height |
+| `control-height-sm` | 32px | Compact control height for inline filters and table toolbars |
+| `control-hover-bg` | `primary-100` | Ghost and secondary control hover |
+| `control-active-bg` | `primary-300` | Pressed control background |
+| `checkbox-size` | 16px | Desktop checkbox and radio size |
+| `checkbox-hit-area` | 24px | Pointer hit area around a checkbox or radio |
+
+**New tokens: desktop interaction states.** Mobile has no hover, so the console adds hover and keyboard-focus states. Focus is the inherited 2px `primary-500` outline with a 2px offset; hover uses the brand tints rather than a new colour.
+
+| State | Token | Value | Usage |
+|---|---|---|---|
+| Hover | `hover-bg` | `primary-100` | Rows, list items, ghost and secondary controls |
+| Hover | `hover-text` | `primary-700` | Text or icon on a hovered element |
+| Active / pressed | `active-bg` | `primary-300` | Pressed control and selected list item |
+| Focus-visible | `focus-ring` | 2px `primary-500`, 2px offset | Keyboard focus, inherited from the mobile system |
+| Focus-visible | `focus-ring-inset` | 2px `primary-500` inset | Focus on a row or cell inside a scroll container, so the ring is not clipped |
+| Selected | `selected-bg` | `primary-100` | Selected row, list item, or menu option |
+| Disabled | `disabled-opacity` | 0.5 | Disabled control and text, matching the mobile input state |
+| Drag / drop | `drop-target-border` | 2px `primary-500` dashed | Drop target during a drag |
+| Loading | `skeleton-bg` | `surface-secondary` | Loading placeholder in a table or panel |
+
+**New tokens: sidebar and navigation.** The console uses a persistent sidebar instead of the mobile bottom navigation. The sidebar reuses the inherited icon grid, `primary-500` active state, and `text-secondary` default state.
+
+| Token | Value | Usage |
+|---|---|---|
+| `sidebar-width` | 240px | Expanded sidebar width at `bp-console-md` and `bp-console-lg` |
+| `sidebar-width-collapsed` | 64px | Icon-only sidebar width at `bp-console-sm` |
+| `sidebar-bg` | `surface-secondary` | Sidebar background |
+| `sidebar-item-height` | 40px | Sidebar navigation item |
+| `sidebar-item-active-bg` | `primary-100` | Active navigation item background |
+| `sidebar-item-active-text` | `primary-700` | Active navigation item text and icon |
+| `sidebar-item-hover-bg` | `primary-100` | Hovered navigation item |
+| `sidebar-item-text` | `text-secondary` | Default navigation item text |
+| `topbar-height` | 56px | Top bar carrying search, context, and the operator menu |
+| `content-gutter` | `space-lg` | Gutter between the shell edge and the content column |
 
 ### Internationalization & Localization
 
@@ -191,7 +295,8 @@ The visual interface is the mobile application. Send and receive channels (USSD/
 
 - **Contrast ratios:** All text meets WCAG AA minimum (4.5:1 normal, 3:1 large). Dark-mode values are checked independently of light mode; the `on-error` role token keeps destructive-button text legible on the dark-mode `error-500` fill.
 - **Preferred accessible colour:** Dark text on a light tinted surface over white text on a dark colour; for secondary text on a coloured panel, rotate the hue toward a brighter colour rather than pushing toward white.
-- **Touch targets:** Interactive elements are a minimum 44×44px.
+- **Touch targets:** Interactive elements are a minimum 44×44px on touch surfaces. This holds for the mobile application and for any touch path.
+- **Desktop pointer targets:** The Operations Console is a pointer-and-keyboard surface and sets a deliberate exception to the 44px touch minimum: its `control-height` is 36px and its `row-height` is 40px, sized for a data-dense desktop layout. The exception is documented here against this target, not silently dropped. Touch paths stay at the 44×44px minimum, so the exception applies only where a pointer is the primary input; where the console is reached on a touch screen, the control hit area is padded to 44px without changing the visual height. The 2px `primary-500` focus ring is unchanged, so keyboard focus stays visible at the smaller control height.
 - **Focus indicators:** Visible focus ring on all interactive elements (2px `primary-500` outline, 2px offset).
 - **Colour independence:** Colour is never the only signal. Payment states pair `success`/`warning`/`error` with an icon and a text label, since colour-blind users must still read whether a payment settled.
 - **Screen reader support:** All images have alt text, all inputs have labels, and dynamic content (payment status, receipt arrival) uses live regions.
