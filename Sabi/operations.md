@@ -168,7 +168,7 @@ This workflow arrives with FEAT-017 in Phase 3. An authorised third party, such 
 This workflow arrives with the payment loop and federal payments in Phase 2. Daily reconciliation matches the payment records store against the licensed rail statement and, for federal payments, against the agency collection record and the Federal Treasury e-Receipt source. It serves Bola's need in [user-personas](user-personas.md).
 
 - Matched items are closed. An unmatched or mismatched item opens an exception case: a debit with no delivery, a payment the agency does not show, or a receipt with no matching payment. The mismatch rules in FEAT-006 and FEAT-009 apply.
-- Federal collection is checked for no point-of-collection deduction and for arrival in the designated treasury account. A deduction or a wrong account is raised as an exception and escalated.
+- Federal collection is checked for no point-of-collection deduction and for arrival in the designated treasury account, the `FederalCollection.accountReference` in [schema](schema.md). A deduction or a wrong account is raised as an exception and escalated. A collection whose account has changed is marked `changed` until the channel is re-resolved (FEAT-006).
 - Exception reporting by reference is produced for agency revenue officers, and carries no personal data beyond the payment reference.
 - Writing off an unreconciled item requires the reconciliation officer and a second approver, and is recorded in the audit log.
 

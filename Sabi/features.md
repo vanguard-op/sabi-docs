@@ -197,7 +197,7 @@ Collects explicit authorisation for a specific amount and payee, executes the pa
 As a payer to a federal agency, I want to settle taxes, levies, fees, and fines and receive the official receipt, so that I have proof the government recognises.
 
 **Description:**
-Covers federal payments to ministries, departments, and agencies, including taxes, levies, fees, and fines. On success, retrieves the Federal Treasury e-Receipt (FTeR) from the central platform and stores it against the obligation. This serves Ngozi, Ifeoma, and Tunde.
+Covers federal payments to ministries, departments, and agencies, including taxes, levies, fees, and fines. The agency-side collection facts the shared catalogue does not carry, the collection account, whether a payer reference is mandatory and how to obtain one, and whether the account has changed, are held on `FederalCollection` in [schema](schema.md). On success, retrieves the Federal Treasury e-Receipt (FTeR) from the central platform and stores it against the obligation. This serves Ngozi, Ifeoma, and Tunde.
 
 **Acceptance criteria:**
 - **Given** a federal obligation with a valid reference

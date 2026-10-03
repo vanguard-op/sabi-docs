@@ -198,6 +198,30 @@ The model is flat and referential, targeting a relational primary database with 
 }
 ```
 
+### FederalCollection
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/federal-collection.schema.json",
+  "title": "FederalCollection",
+  "description": "The agency-side facts a Service does not carry: the agency account a federal collection arrives in, whether a payer reference is mandatory, how a payer obtains one, and whether the agency has changed its collection account.",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the federal collection." },
+    "serviceId": { "type": "string", "description": "References the Service collected through this channel; exactly one federal collection per service." },
+    "accountReference": { "type": "string", "description": "Agency account a federal collection arrives in. Checked by reconciliation for the designated treasury account.", "minLength": 1, "maxLength": 128 },
+    "requiresReference": { "type": "boolean", "description": "Whether a payer reference, such as an agency-issued assessment number, is mandatory before the obligation can be paid.", "default": false },
+    "instructions": { "type": ["string", "null"], "description": "How to complete the payment, shown when no extra guidance is needed.", "maxLength": 512 },
+    "referenceInstructions": { "type": ["string", "null"], "description": "How a payer obtains the reference, shown when one is required and the user has not supplied it, so Sabi explains rather than paying without it.", "maxLength": 512 },
+    "status": { "type": "string", "enum": ["current", "changed"], "description": "Collection-account state: current when the account is valid, changed when the agency has switched collection accounts and the channel must be re-resolved." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." },
+    "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time (UTC)." }
+  },
+  "required": ["id", "serviceId", "accountReference", "requiresReference", "status", "createdAt", "updatedAt"]
+}
+```
+
 ### PaymentMandate
 
 ```json
@@ -455,6 +479,7 @@ The model is flat and referential, targeting a relational primary database with 
 - **Capability** `serviceId` references **Service**, a capability maps to at most one service.
 - **CapabilityReview** `providerId` references **Provider**, each review concerns exactly one provider.
 - **CapabilityReview** `capabilityId` references **Capability**, a review concerns at most one capability.
+- **FederalCollection** `serviceId` references **Service**, each federal collection belongs to exactly one service.
 - **PaymentMandate** `userId` references **User**, each mandate is authorised by exactly one user.
 - **PaymentMandate** `capabilityId` references **Capability**, each mandate may name one capability.
 - **PaymentMethod** `userId` references **User**, each method belongs to exactly one user.
