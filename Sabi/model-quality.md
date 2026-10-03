@@ -74,7 +74,7 @@ When the model is unsure, it asks or declines. It does not guess a payee, an amo
 
 ## Model version and fallback
 
-**Pinned version:** The primary path is `gemini-3.1-pro-preview`, and high-volume intent resolution uses the lower-cost `gemini-3-flash-preview`. Decoding is pinned per capability: temperature `0.0` and top_p `1.0`. The quality bar is measured against this pinned build. The primary is a preview model, so the deprecation policy below applies to it.
+**Pinned version:** The primary path is `gemini-3.1-pro-preview`, and high-volume intent resolution uses the lower-cost `gemini-3.1-flash-lite`. Decoding is pinned per capability: temperature `0.0` and top_p `1.0`. The quality bar is measured against this pinned build. The primary is a preview model, so the deprecation policy below applies to it.
 **Upgrade policy:** A version change requires a full evaluation run against every bar above; a capability that falls below threshold does not ship until it is retrained, re-prompted, or the version is rolled back.
 **Provider failure:** When the provider is unavailable, the product degrades to keyword and search resolution with mandatory confirmation, and payment execution pauses rather than proceeding without grounding.
 **Deprecation:** When the pinned model is retired, the replacement is evaluated against the same datasets before cutover, and the fallback path remains available until the new model clears every bar.
