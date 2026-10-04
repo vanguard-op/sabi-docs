@@ -10,7 +10,7 @@ This document defines the behavior and quality contract for the model-backed cap
 |---|---|---|---|---|
 | MQ-001 | Turn a free-form request into a machine-actionable intent, and author the user-facing reply | FEAT-003 | Model-authored `reply` (rubric) plus a reduced structured intent (schema) | Client renders its prewritten fallback reply; ask follow-up questions across up to three turns; then keyword and search resolution with confirmation |
 | MQ-002 | Rank candidate agencies and billers for a query, and author the accompanying reply | FEAT-004 | Model-authored `reply` (rubric) plus a structured ranked list (schema) | Client renders its prewritten fallback reply; present no match and record the query for coverage |
-| MQ-003 | Compose a task interface from the client catalogue | FEAT-011 | Declarative UI messages | Render the client fallback form for the same task |
+| MQ-003 | Compose a task interface from the published Sabi catalog | FEAT-011 | A2UI messages conforming to the catalog | Render the client fallback form for the same task |
 | MQ-004 | Understand Hausa, Yoruba, and Igbo requests | FEAT-016 | Structured schema with detected language | Fall back to English with a note rather than mis-resolve |
 
 ## Output and behavior contract
@@ -34,12 +34,12 @@ This document defines the behavior and quality contract for the model-backed cap
 
 ### MQ-003: Interface composition
 
-**Output:** A stream of declarative UI messages that create a surface, define a flat component list with identifier references, and update the data model. Components are limited to the client catalogue.
-**Reproducibility:** Variation accepted; any stream that validates against the client catalogue and satisfies the task contract is correct.
-**Refusal:** The model must not request a component outside the catalogue and must not embed executable code, scripts, or external resource loads in any message. A request outside the catalogue is refused by the client.
-**Fallback:** The client renders its static fallback form for the same task, so the task remains completable even if no valid surface arrives.
+**Output:** An A2UI message stream that creates a surface (naming the client's `catalogId`), defines a flat component list with identifier references, and updates the data model. Components are limited to the published Sabi catalog, which conforms to A2UI's Catalog schema and is the single source of truth the agent composes against and both sides validate against. The client renders the stream through the official Flutter GenUI SDK.
+**Reproducibility:** Variation accepted; any stream that validates against the catalog on both sides (agent pre-send and client-side) and satisfies the task contract is correct.
+**Refusal:** The model must not request a component outside the catalog and must not embed executable code, scripts, or external resource loads in any message. A request outside the catalog is refused by the agent-side pre-send validation before the payload is sent, and by the client's validation on receipt; the client reports a client-side failure to the agent as `VALIDATION_FAILED`.
+**Fallback:** The client renders its prewritten fallback form for the same task, so the task remains completable even if no valid surface arrives, no compatible catalog is negotiated, or the alpha GenUI SDK is unavailable or fails to render the surface.
 
-> **Contract impact (C-012).** The composed surface is the task mechanism for every task and record type, not only task flows. C-012's `task` enum is currently `confirmation|amount_entry|receipt|discovery` and must gain `verification` and `recovery`; and `receipt` must accept a context carrying a resolved record reference from a record lookup, not only a post-payment service payment. `CONTRACTS.md` is not written here; this note is for the lead to revise C-012.
+> **Contract impact (C-012).** The composed surface is the task mechanism for every task and record type, not only task flows. C-012 already carries a `task` enum of `confirmation|amount_entry|receipt|discovery|verification|recovery`, with `receipt` accepting a context that carries a resolved record reference from a record lookup as well as a post-payment service payment. The remaining impact is the surface shape: the payload becomes an A2UI message stream conforming to the published Sabi catalog, the `task` vocabulary maps onto catalog surfaces, the surface names the catalog's `catalogId` negotiated from the client's `supportedCatalogIds`, and `fallback` semantics are reconsidered so a validation failure, an unknown component, or an absent compatible catalog degrades to the same-task fallback. C-012 likely moves to a revision that carries the A2UI message stream and the `catalogId`. `CONTRACTS.md` is not written here; this note is for the lead to revise C-012.
 
 ### MQ-004: Nigerian-language understanding
 
@@ -58,7 +58,7 @@ Each capability with a judged output carries a measured bar. A threshold applies
 | MQ-001R | Intent-resolution reply | The same 1,000-utterance set, scored on the model's authored replies | Reply rubric pass rate, across the dimensions below | 0.90 | Human rubric review on a sampled subset | Every release |
 | MQ-002 | Discovery ranking | 500 labelled queries to agencies and billers | Correct result within top 3 | 0.90 | Human-verified labels | Every release |
 | MQ-002R | Discovery reply | The same 500-query set, scored on the model's authored replies | Reply rubric pass rate, across the dimensions below | 0.90 | Human rubric review on a sampled subset | Every release |
-| MQ-003 | Interface composition | 300 task flows across payment types and channels | Schema-valid output; rubric pass | 0.95 schema; 0.90 rubric | Automated catalogue validation plus rubric review | Every release |
+| MQ-003 | Interface composition | 300 task flows across payment types and channels | Schema-valid output; rubric pass | 0.95 schema; 0.90 rubric | Automated validation against the published Sabi catalog plus rubric review | Every release |
 | MQ-004 | Nigerian-language understanding | 500 utterances per language, labelled by native speakers | Top-1 intent accuracy per language | 0.85 per language | Native-speaker labelled set per language | Per language, before that language is enabled |
 
 A payment capability is held to a higher bar than a discovery capability because a wrong intent moves money to the wrong place. MQ-001 carries the highest threshold for that reason. Each bar has a stated growth path of one point per quarter until it reaches 0.97, pending dataset expansion.
@@ -89,7 +89,7 @@ The reply is additionally constrained as free text: it carries no executable cod
 
 Account grounding (FEAT-023) and durable memory (FEAT-024) are retrieved content and obey the same rule. The assistant's account context (the user's display name, verification status, receipts, and obligations) is read from the source records and cited, never recalled; naming the user is a read of `User.displayName` when present, and no name is invented when it is absent. Persisted preferences and corrections are advisory only: memory may narrow or pre-fill a resolution, but it never supplies a fact and never overrides the catalogue, a receipt, or the confirmation gate. A payment field resolved from memory must be re-confirmed against the catalogue before any payment, and a preference that conflicts with the catalogue loses to the catalogue. Memory is untrusted like all retrieved content: it cannot override the payment policy, and it is subject to the same consent, retention, and deletion rules as the rest of the personal data (NFR-040). These are grounding constraints on the existing capabilities, not a new judged capability, so no new quality bar is added.
 
-User input and retrieved content are untrusted. Instructions found inside retrieved content never override the payment policy, and no payment is executed without an explicit, signed authorisation bound to the amount and payee (see `NFR-027` in [nfr](nfr.md)). The model must never emit executable code, must never request a component outside the client catalogue, and must never disclose another user's data.
+User input and retrieved content are untrusted. Instructions found inside retrieved content never override the payment policy, and no payment is executed without an explicit, signed authorisation bound to the amount and payee (see `NFR-027` in [nfr](nfr.md)). The model must never emit executable code, must never request a component outside the published Sabi catalog, and must never disclose another user's data.
 
 When the model is unsure, it asks or declines. It does not guess a payee, an amount, or a service. This refusal behavior is a product decision and is enforced before execution, not left to the implementer.
 
@@ -124,6 +124,6 @@ The client's prewritten fallback copy for each state, and the tone and neutralit
 | MQ-001R | Reply rubric review on a sampled subset of the same set | Every release | AI Engineering |
 | MQ-002 | Evaluation run against the 500-query set | Every release | AI Engineering |
 | MQ-002R | Reply rubric review on a sampled subset of the same set | Every release | AI Engineering |
-| MQ-003 | Catalogue schema validation plus rubric review of 300 flows | Every release | AI Engineering and Client |
+| MQ-003 | Validation against the published Sabi catalog plus rubric review of 300 flows | Every release | AI Engineering and Client |
 | MQ-004 | Per-language evaluation with native-speaker labels | Per language, before enablement | AI Engineering |
 | All | Live quality telemetry and drift review against the bars | Monthly | Operations |

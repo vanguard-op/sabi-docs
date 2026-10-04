@@ -24,7 +24,7 @@
 | Component | Type | Platform | Purpose | Data Source |
 |---|---|---|---|---|
 | Composer | TextField | Mobile | Take a free-form request in English or Pidgin | User input |
-| Composed Task Surface | Container | Mobile | Render the agent-composed result, task, record, or prompt inline | Agent UI stream (FEAT-011) |
+| Composed Task Surface | Container | Mobile | Render the agent-composed result, task, record, or prompt inline through the GenUI SDK against the published Sabi catalog | A2UI message stream (FEAT-011) |
 | Service Result Row | List item | Mobile | Show a collecting body and known amount | Resolved discovery (FEAT-004) |
 | Status Pill | Badge | Mobile | Show the state of a recent payment or receipt | Receipt and payment records |
 | Receipt Card | Card | Mobile | Show a recent receipt | Receipt records |
@@ -67,6 +67,7 @@
 | **Verifying inline** | A task requires identity verification | The composed verification surface in the conversation; the task is held, not failed |
 | **Record lookup** | A record lookup resolved to a match | The record rendered inline as a composed surface, or a route to the existing screen, left to the user |
 | **Recovering inline** | A payment failed or was reversed | The composed recovery surface in the conversation, showing state and next step |
+| **Surface fallback** | The A2UI payload fails catalog validation, names an unknown component, no compatible catalog is negotiated, or the GenUI SDK is unavailable or fails to render | The client's prewritten text-and-form fallback for the same task, inline; the task stays completable and a client-side validation failure is reported to the agent as `VALIDATION_FAILED` |
 | **Clarifying** | Confidence below threshold and the clarification bound not reached | A model-authored follow-up question with the closest candidates, building on the conversation, up to three in one conversation |
 | **Unresolved** | Still below threshold after the clarification bound | The model-authored after-bound reply: the honest reason, catalogue search and human support, and an invitation to continue |
 | **Conversational** | Non-command input such as a greeting | A model-authored conversational reply stating what Sabi can do and inviting a request |
@@ -80,6 +81,7 @@
 - A request that names another person's account → refuse and explain.
 - A record lookup that matches several records → present the candidates and let the user choose which to open.
 - A record lookup raised mid-task → answer it without abandoning the open task.
+- The GenUI SDK fails to render a composed surface, or the payload fails catalog validation → render the prewritten fallback form for the same task; task completion never depends on the alpha SDK, and a client-side validation failure is reported to the agent as `VALIDATION_FAILED`.
 - Very long free-form input → wrap and keep the send action reachable.
 
 ### Assistant replies

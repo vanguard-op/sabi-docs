@@ -14,9 +14,9 @@ The system is one deployable application that owns identity, catalogue, the agen
 ### Component: Client Application
 
 **Responsibility:** Delivers the mobile experience and executes passkey ceremonies on device.
-**Provides:** On-screen task flows, confirmation and receipt views, offline queue, and passkey authentication.
+**Provides:** On-screen task flows, confirmation and receipt views, offline queue, passkey authentication, the published Sabi catalog, and the A2UI surface renderer.
 **Consumes:** API gateway, identity and auth service, notification service.
-**Platform notes:** Android and iOS from one cross-platform codebase. Must meet the cold-start and memory budgets for a 1 to 2 GB device (NFR-001). Holds a local cache and replays queued writes on reconnection.
+**Platform notes:** Android and iOS from one cross-platform codebase. Must meet the cold-start and memory budgets for a 1 to 2 GB device (NFR-001). Holds a local cache and replays queued writes on reconnection. Publishes the Sabi catalog (a JSON Schema conforming to A2UI's Catalog schema, with a `catalogId` URI) and advertises its `supportedCatalogIds`; renders every agent-composed surface through the official Flutter GenUI SDK against that catalog, and validates the incoming A2UI payload against it before rendering (FEAT-011). The `genui` package is alpha, so the client's prewritten fallback form for the same task carries the task whenever the SDK is unavailable or fails to render (FEAT-011 fallback).
 
 ### Component: USSD/SMS Channel Gateway
 
@@ -56,16 +56,16 @@ The system is one deployable application that owns identity, catalogue, the agen
 ### Component: Agent Orchestrator
 
 **Responsibility:** Turns a request into a task, resolves intent, calls capabilities, and enforces refusal.
-**Provides:** Task lifecycle, intent resolution, multi-turn clarification, capability invocation, account-grounded answers, consent-gated durable memory, and the confirmation gate before payment.
-**Consumes:** Model serving, retrieval index, capability registry, service catalogue, payment module, receipt service, user account context (identity summary, verification status, receipts, obligations), and persisted memory (preferences, corrections).
-**Platform notes:** No payment executes without explicit, confirmed authorisation (NFR-027). The orchestrator carries the conversation context across turns so each clarification builds on the answers already given. Low-confidence intents ask, up to the MQ-001 bound, or decline rather than guess (MQ-001). Each turn it assembles a bounded account context for the asking user and passes it to the model as retrieved, citable content, so an answer about the user's own receipts or obligations comes from the source record rather than model recall (FEAT-023). Durable memory is captured only from an explicit user statement or a user-confirmed correction, is advisory rather than a source of fact, and is subject to the NDPA consent, retention, and deletion rules (FEAT-024, NFR-040).
+**Provides:** Task lifecycle, intent resolution, multi-turn clarification, capability invocation, account-grounded answers, consent-gated durable memory, the A2UI composition and catalog negotiation against the client's `supportedCatalogIds`, and the confirmation gate before payment.
+**Consumes:** Model serving, retrieval index, capability registry, service catalogue, payment module, receipt service, user account context (identity summary, verification status, receipts, obligations), persisted memory (preferences, corrections), and the client's published Sabi catalog and `supportedCatalogIds` (FEAT-011).
+**Platform notes:** No payment executes without explicit, confirmed authorisation (NFR-027). The orchestrator carries the conversation context across turns so each clarification builds on the answers already given. Low-confidence intents ask, up to the MQ-001 bound, or decline rather than guess (MQ-001). Each turn it assembles a bounded account context for the asking user and passes it to the model as retrieved, citable content, so an answer about the user's own receipts or obligations comes from the source record rather than model recall (FEAT-023). Durable memory is captured only from an explicit user statement or a user-confirmed correction, is advisory rather than a source of fact, and is subject to the NDPA consent, retention, and deletion rules (FEAT-024, NFR-040). It selects the client's published catalog from the negotiated `supportedCatalogIds` for each surface; if no compatible catalog is found it sends no UI rather than composing an off-catalog surface (FEAT-011).
 
 ### Component: Capability Registry
 
 **Responsibility:** Records and discovers provider capabilities.
 **Provides:** Registration, review, discovery, schema versioning, and health status for provider services.
 **Consumes:** Primary database, provider adapters.
-**Platform notes:** A capability outside the client component catalogue is never offered to users. Unhealthy capabilities are withdrawn from discovery (FEAT-012).
+**Platform notes:** A capability outside the published Sabi catalog is never offered to users. Unhealthy capabilities are withdrawn from discovery (FEAT-012).
 
 ### Component: Provider Adapters
 
@@ -98,9 +98,9 @@ The system is one deployable application that owns identity, catalogue, the agen
 ### Component: Model Serving
 
 **Responsibility:** Runs the model-backed capabilities.
-**Provides:** Intent resolution, discovery ranking, and interface composition.
-**Consumes:** Model provider, retrieval index.
-**Platform notes:** The pinned model version is fixed at build time. A provider failure degrades to keyword and search resolution with mandatory confirmation (model-quality fallback policy).
+**Provides:** Intent resolution, discovery ranking, and interface composition as an A2UI message stream against the client's published Sabi catalog.
+**Consumes:** Model provider, retrieval index, the published Sabi catalog (for the agent-side pre-send validation).
+**Platform notes:** The pinned model version is fixed at build time. Composition output is validated against the catalog before it is sent (A2UI two-phase validation, agent side); a payload that fails validation does not reach the client as a surface and degrades to the fallback for the same task (MQ-003). The catalog is versioned additively per A2UI, with a major version carried in the `catalogId` URI. A provider failure degrades to keyword and search resolution with mandatory confirmation (model-quality fallback policy).
 
 ### Component: Retrieval Index
 

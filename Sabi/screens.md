@@ -53,10 +53,11 @@ Used on: Home, Receipts, Account
 
 ### Composed Task Surface
 Used on: Home, Payment Confirmation, Identity Verification, Case
-- The agent-composed container. It renders only components in this catalogue, never a raw message. It is the task mechanism: every task and record type is rendered from it, and the prewritten shell around it (composer, navigation, static chrome, fixed buttons and labels) is never composed.
-- Consumes a declarative UI stream: surface creation, components, and data model; the client renders natively with brand tokens.
-- Renders any task surface the catalogue supports: service payment (confirmation, amount entry, provider choice), identity verification, a resolved record such as a receipt lookup, and failed-payment or case recovery.
-- Refuses an unknown component and renders a text-and-form fallback for the same task, so the task stays completable.
+- The agent-composed container. It renders only components in the published Sabi catalog, never a raw message. It is the task mechanism: every task and record type is rendered from it, and the prewritten shell around it (composer, navigation, static chrome, fixed buttons and labels) is not in the catalog and is never composed.
+- The client publishes the Sabi catalog (a JSON Schema conforming to A2UI's Catalog schema, with a `catalogId` URI) and advertises its `supportedCatalogIds`. The catalog is the single source of truth the agent composes against and both sides validate against. Its composed surfaces are the confirmation summary, amount entry, provider picker, service result row, receipt card, status pill, verification, and recovery; the shell is not among them.
+- Consumes an A2UI message stream: surface creation (naming the `catalogId`), components, and data model; the client renders natively with brand tokens through the official Flutter GenUI SDK renderer.
+- Renders any task surface the catalog supports: service payment (confirmation, amount entry, provider choice), identity verification, a resolved record such as a receipt lookup, and failed-payment or case recovery.
+- Validates the incoming payload against the catalog and reports a client-side failure to the agent as `VALIDATION_FAILED`; degrades an unknown component gracefully and renders a text-and-form fallback for the same task, so the task stays completable. The `genui` package is alpha, so the fallback also carries the task whenever the SDK is unavailable or fails to render.
 - Discards a malformed UI message without losing the task; renders placeholders for partial data.
 
 ### Confirmation Summary

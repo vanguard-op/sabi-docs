@@ -22,7 +22,7 @@
 
 | Component | Type | Platform | Purpose | Data Source |
 |---|---|---|---|---|
-| Composed Task Surface | Container | Mobile | Render the confirmation from the client catalogue | Agent UI stream (FEAT-011) |
+| Composed Task Surface | Container | Mobile | Render the confirmation from the published Sabi catalog | A2UI message stream (FEAT-011) |
 | Confirmation Summary | Container | Mobile | Show amount, payee, charges, reference | Resolved intent |
 | Authorise button | ElevatedButton | Mobile | Take explicit authorisation | Static |
 | Status Pill | Badge | Mobile | Show authorising, failure, or reconciling | Payment state |
