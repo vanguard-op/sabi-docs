@@ -83,13 +83,13 @@ This is the Phase 1 workflow for FEAT-012. A provider publishes a discoverable c
 |---|---|---|
 | Provider identity and ownership | Legal name, collecting body, operational contact, and the authority to collect the service | Authority is not established, or two providers claim the same service without a resolution |
 | Capability description | What it collects, required inputs, amount source, result contract, and category | The description is incomplete, or the service falls outside the scope in [overview](overview.md) |
-| Input schema and version | The declared input schema and its version, against the client component catalogue | The schema is missing or invalid, or it requires a component outside the catalogue |
+| Input schema and version | The declared input schema and its version, against the published Sabi catalog | The schema is missing or invalid, or it requires a component outside the catalogue |
 | Amount handling | The amount source (`fixed`, `user_entered`, or `provider_query`) and, where fixed, the amount and currency | The amount source is absent, or a fixed amount is not stated in minor units |
 | Result contract | The success, failure, and receipt fields the agent collects | The result cannot be validated or cannot yield a receipt |
 | Data handling | The personal data the provider receives and its stated handling | The provider cannot meet the data rules in [nfr](nfr.md) |
 | Government collection | For a federal service, the regularised collection channel and whether any deduction is taken | A point-of-collection deduction is proposed, or the channel is not the regularised one |
 
-**Approval and activation.** A provider review analyst reviews the submission and activates the capability only after approval. A rejected submission states the reason and can be corrected and resubmitted. Activation makes the capability discoverable (FEAT-012); routing a live payment to it becomes available with the payment loop in Phase 2, per [roadmap](roadmap.md). A capability outside the client component catalogue is never offered to users. Activation records the reviewer, the decision, and the schema version in the audit log.
+**Approval and activation.** A provider review analyst reviews the submission and activates the capability only after approval. A rejected submission states the reason and can be corrected and resubmitted. Activation makes the capability discoverable (FEAT-012); routing a live payment to it becomes available with the payment loop in Phase 2, per [roadmap](roadmap.md). A capability outside the published Sabi catalog is never offered to users. Activation records the reviewer, the decision, and the schema version in the audit log.
 
 **Schema-version review.** A provider that changes its input schema submits the new version. A compatible change is reviewed and adopted; an incompatible change is rejected until reviewed (FEAT-012). The previous version stays active until the new one is approved, so an in-flight task is not broken. A schema change follows the same review criteria as a new capability.
 

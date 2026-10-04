@@ -105,7 +105,7 @@ A rejected submission states the reason from [operations](operations.md) and can
 | Read the current schema version | C-015 `GET /v1/capabilities/{capabilityId}` | `schemaVersion` field |
 | Submit a changed capability version | C-014 `POST /v1/providers/{providerId}/capabilities` | A new version of the same capability |
 | Approve or reject the version | C-016 `POST /v1/capabilities/{capabilityId}/review` | `schemaVersion` on the request must match, or the call returns 409 |
-| View the schema against the client component catalogue | C-015 plus the catalogue read | A component outside the catalogue is rejected, per [features](features.md) |
+| View the schema against the published Sabi catalog | C-015 plus the catalogue read | A component outside the catalogue is rejected, per [features](features.md) |
 
 ### Capability health and quarantine
 
