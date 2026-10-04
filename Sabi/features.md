@@ -83,7 +83,7 @@ Verifies identity against the national identity infrastructure (NIN, with BVN wh
 As a user, I want to describe what I need to pay in my own words, so that I do not have to learn a menu structure or a portal.
 
 **Description:**
-Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into a structured intent with the target, the amount if stated, and any constraints. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. Output contract: structured JSON with intent type, target candidate list, amount in minor units, currency, and confidence; the client renders a confirmation from this structure, not from raw text. Fallback: when confidence is below threshold, Sabi asks one clarifying question with the closest candidates, and if it still cannot resolve, it says so and offers search or human support rather than guessing.
+Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into a structured intent with the target, the amount if stated, and any constraints. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. The assistant converses: it keeps the context of the exchange and, when a request does not resolve, asks follow-up questions that build on what the user has already said rather than restarting. Output contract: structured JSON with intent type, target candidate list, amount in minor units, currency, and confidence; the client renders a confirmation from this structure, not from raw text. Fallback: when confidence is below threshold, Sabi asks a follow-up question with the closest candidates. It may ask up to three clarifying questions in one conversation; if the request is still unresolved after the third, it says so, offers catalogue search and human support, and records the request for coverage rather than guessing. A greeting or other non-command message is answered conversationally, with what Sabi can do and an invitation to state a request, and is never treated as a coverage miss or recorded for coverage. No payment is initiated without explicit confirmation, on any turn.
 
 **Acceptance criteria:**
 - **Given** a Pidgin request such as "I wan pay my electricity"
@@ -94,12 +94,23 @@ Interprets a free-form request (for example, "pay my land use charge" or "buy fi
   **Then** Sabi returns the responsible agency and asks for confirmation before payment.
 - **Given** a request Sabi cannot map
   **When** confidence is below threshold
-  **Then** Sabi asks one clarifying question instead of initiating a payment.
+  **Then** Sabi asks a follow-up question with the closest candidates instead of initiating a payment, and keeps the conversation open for an answer.
+- **Given** an answer that still does not resolve the request
+  **When** fewer than three clarifying questions have been asked
+  **Then** Sabi asks another, narrowed by the answers already given.
+- **Given** a request still unresolved after three clarifying questions
+  **When** the conversation reaches the bound
+  **Then** Sabi states it cannot resolve the request, offers catalogue search and human support, records the request for coverage, and initiates no payment.
+- **Given** a greeting such as "Hello"
+  **When** submitted
+  **Then** Sabi responds conversationally with what it can do and an invitation to state a request, and does not record the message as a coverage gap.
 
 **Edge cases and failure states:**
 - Ambiguous target matches several agencies: present the top candidates and require a choice.
 - Model provider unavailable: fall back to keyword and search-based resolution and label the result as unresolved until confirmed.
 - A request that names another person's account: refuse and explain.
+- Non-command message (a greeting, thanks, or small talk): answer conversationally; never count it as a clarification turn, record it for coverage, or start a task.
+- The user stops answering mid-clarification: keep the request on screen, start no task, and record nothing for coverage.
 
 ### FEAT-004: Service, agency, and biller discovery
 

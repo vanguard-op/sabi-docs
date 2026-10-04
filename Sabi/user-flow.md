@@ -115,7 +115,7 @@ graph TD
 10. System opens Receipt Detail with the FTeR identifier marked verified and shows a success toast.
 
 **Alternate Path A — Low confidence:**
-- At step 2, if confidence is below threshold, Sabi asks one clarifying question in Home with the closest candidates. If it still cannot resolve, it says so and offers search or human support. No payment starts.
+- At step 2, if confidence is below threshold, Sabi keeps the conversation context and asks a follow-up question in Home with the closest candidates. The user's answer is added to what Sabi already knows, and Sabi asks again while the request stays unclear, up to three clarifying questions in one conversation. If it still cannot resolve after the third, it says so, offers catalogue search and human support, and records the request for coverage. No payment starts.
 
 **Alternate Path B — Multiple matches:**
 - At step 3, a Provider picker sheet lists the top candidates and requires a choice before Payment Confirmation.
@@ -144,11 +144,14 @@ graph TD
 **Alternate Path J — Offline:**
 - At step 1, if the device is offline, the request is queued and discovery is unavailable with an offline banner. Authorisation cannot be given offline.
 
+**Alternate Path K — Greeting or non-command message:**
+- At step 1, if the user sends a greeting or other non-command message (for example, "Hello"), Sabi answers conversationally, states what it can do, and invites a request. The message is not treated as a low-confidence intent or a coverage miss, and is not recorded for coverage.
+
 ### States & Overlays Referenced
 
 | Screen or Overlay | States |
 |---|---|
-| Home | Default, Composing, Discovery results, Clarifying, Not covered, Awaiting FTeR, Offline, Error |
+| Home | Default, Composing, Discovery results, Clarifying, Conversational, Not covered, Awaiting FTeR, Offline, Error |
 | Payment Confirmation | Default, Amount entry, Authorising, Mandate signed, Failure, Reconciling |
 | Identity Verification | Default, Checking, Verified, No match, Provider unavailable |
 | Receipt Detail | Awaiting receipt, Verified, Unverified, Error |

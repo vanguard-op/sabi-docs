@@ -8,7 +8,7 @@ This document defines the behavior and quality contract for the model-backed cap
 
 | ID | Capability | Feature | Output contract | Fallback |
 |---|---|---|---|---|
-| MQ-001 | Turn a free-form request into a structured payment or discovery intent | FEAT-003 | Structured schema | Ask one clarifying question; then keyword and search resolution with confirmation |
+| MQ-001 | Turn a free-form request into a structured payment or discovery intent | FEAT-003 | Structured schema | Ask follow-up questions across up to three turns; then keyword and search resolution with confirmation |
 | MQ-002 | Rank candidate agencies and billers for a query | FEAT-004 | Structured ranked list | Present no match and record the query for coverage |
 | MQ-003 | Compose a task interface from the client catalogue | FEAT-011 | Declarative UI messages | Render the client fallback form for the same task |
 | MQ-004 | Understand Hausa, Yoruba, and Igbo requests | FEAT-016 | Structured schema with detected language | Fall back to English with a note rather than mis-resolve |
@@ -17,9 +17,9 @@ This document defines the behavior and quality contract for the model-backed cap
 
 ### MQ-001: Intent resolution
 
-**Output:** Structured object with fields: `intent_type` (one of `gov_payment`, `bill_payment`, `discovery`, `status_check`, `receipt_lookup`, `unknown`), `target` (a catalogue service identifier or null), `amount` (integer minor units in `currency`, or null), `currency` (default `NGN`), `reference` (string or null), `constraints` (object), `confidence` (0 to 1), `language`, and `clarifying_question` (string or null). Amounts are integer minor units (kobo for NGN), never decimal major units, and `currency` gives the currency.
-**Reproducibility:** Model version and decoding settings pinned for evaluation; structure is fixed, phrasing of clarifications may vary.
-**Refusal:** If `confidence` is below the cutoff of **0.70**, the model must ask exactly one clarifying question and must not set `intent_type` to a payment type. If confidence is still below 0.70 after that single clarifying question, the model must state that it cannot resolve the request, offer catalogue search and human support, record the query for coverage, and must not initiate a payment. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
+**Output:** Structured object with fields: `intent_type` (one of `gov_payment`, `bill_payment`, `discovery`, `status_check`, `receipt_lookup`, `non_command`, `unknown`), `target` (a catalogue service identifier or null), `amount` (integer minor units in `currency`, or null), `currency` (default `NGN`), `reference` (string or null), `constraints` (object), `confidence` (0 to 1), `language`, and `clarifying_question` (string or null). Amounts are integer minor units (kobo for NGN), never decimal major units, and `currency` gives the currency.
+**Reproducibility:** Model version and decoding settings pinned for evaluation; structure is fixed and the model receives the earlier turns of the conversation, so phrasing of clarifications may vary across turns.
+**Refusal:** If `confidence` is below the cutoff of **0.70**, the model must ask a follow-up question and must not set `intent_type` to a payment type. The conversation is stateful: each turn carries the earlier turns, and the model asks again while the request stays below the cutoff, up to **three** clarifying questions in one conversation. If confidence is still below 0.70 after the third, the model must state that it cannot resolve the request, offer catalogue search and human support, record the request for coverage, and must not initiate a payment. A greeting or other non-command message is classified `non_command`, not `unknown`: the model asks no clarifying question, sets no payment field, and records nothing for coverage, and the client renders a localised conversational reply from that intent rather than from model text. If the target cannot be resolved to a catalogue identifier, it must return `unknown` and must not invent an identifier, amount, or reference.
 **Fallback:** When the model is unavailable or returns unusable output, the client resolves the request through keyword and search over the catalogue and requires explicit confirmation before any payment.
 
 ### MQ-002: Discovery ranking
@@ -49,7 +49,7 @@ Each capability with a judged output carries a measured bar. A threshold applies
 
 | ID | Capability | Dataset | Metric | Threshold | Judge | Gate |
 |---|---|---|---|---|---|---|
-| MQ-001 | Intent resolution | 1,000 labelled Nigerian payment utterances in English and Pidgin, refreshed monthly | Top-1 intent accuracy | 0.92 | Human-labelled golden set | Every release |
+| MQ-001 | Intent resolution | 1,000 labelled Nigerian payment utterances in English and Pidgin, including multi-turn clarification sequences, refreshed monthly | Top-1 intent accuracy | 0.92 | Human-labelled golden set | Every release |
 | MQ-002 | Discovery ranking | 500 labelled queries to agencies and billers | Correct result within top 3 | 0.90 | Human-verified labels | Every release |
 | MQ-003 | Interface composition | 300 task flows across payment types and channels | Schema-valid output; rubric pass | 0.95 schema; 0.90 rubric | Automated catalogue validation plus rubric review | Every release |
 | MQ-004 | Nigerian-language understanding | 500 utterances per language, labelled by native speakers | Top-1 intent accuracy per language | 0.85 per language | Native-speaker labelled set per language | Per language, before that language is enabled |
@@ -58,7 +58,7 @@ A payment capability is held to a higher bar than a discovery capability because
 
 Separately from the accuracy bars above, a single serving confidence cutoff of **0.70** gates every judged capability that emits a confidence. The cutoff and its per-capability behavior are:
 
-- **MQ-001:** below 0.70 the model asks exactly one clarifying question and does not resolve a payment intent; if confidence is still below 0.70 after that question, it states it cannot resolve, offers search and human support, records the query for coverage, and does not initiate a payment (see the MQ-001 Refusal rule).
+- **MQ-001:** below 0.70 the model asks a follow-up question and does not resolve a payment intent; it may ask up to three clarifying questions in one conversation, each turn carrying the earlier turns; if confidence is still below 0.70 after the third, it states it cannot resolve, offers search and human support, records the request for coverage, and does not initiate a payment (see the MQ-001 Refusal rule). A non-command message is classified `non_command`, is never a clarification turn, and is never recorded for coverage.
 - **MQ-002:** below 0.70 the model returns `no_match` and records the query for coverage.
 - **MQ-004:** below 0.70 the model falls back to English with a note and confirms the interpreted intent before any payment.
 

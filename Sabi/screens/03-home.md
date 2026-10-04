@@ -27,7 +27,7 @@
 | Service Result Row | List item | Mobile | Show a collecting body and known amount | Resolved discovery (FEAT-004) |
 | Status Pill | Badge | Mobile | Show the state of a recent payment or receipt | Receipt and payment records |
 | Receipt Card | Card | Mobile | Show a recent receipt | Receipt records |
-| Clarification prompt | Inline region | Mobile | Ask one question with the closest candidates | Intent resolution (FEAT-003) |
+| Clarification prompt | Inline region | Mobile | Ask a follow-up question with the closest candidates, building on the conversation | Intent resolution (FEAT-003) |
 
 ### Overlays
 
@@ -59,7 +59,8 @@
 | **Loaded** | Activity loaded | Conversation with composed surfaces |
 | **Composing** | A request is being resolved | Composer disabled with progress |
 | **Discovery results** | Matches found | Composed list of Service Result Rows |
-| **Clarifying** | Confidence below threshold | One clarifying question with the closest candidates |
+| **Clarifying** | Confidence below threshold | A follow-up question with the closest candidates, up to three in the conversation |
+| **Conversational** | Non-command input such as a greeting | A conversational reply stating what Sabi can do and inviting a request |
 | **Not covered** | No catalogue match | Plain statement, query recorded, human support offered |
 | **Offline** | No connectivity | Offline banner; requests queued; no authorisation |
 | **Error** | Resolution failed | Error state with "Try again" |

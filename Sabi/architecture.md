@@ -56,9 +56,9 @@ The system is one deployable application that owns identity, catalogue, the agen
 ### Component: Agent Orchestrator
 
 **Responsibility:** Turns a request into a task, resolves intent, calls capabilities, and enforces refusal.
-**Provides:** Task lifecycle, intent resolution, clarification, capability invocation, and the confirmation gate before payment.
+**Provides:** Task lifecycle, intent resolution, multi-turn clarification, capability invocation, and the confirmation gate before payment.
 **Consumes:** Model serving, retrieval index, capability registry, service catalogue, payment module, receipt service.
-**Platform notes:** No payment executes without explicit, confirmed authorisation (NFR-027). Low-confidence intents ask or decline rather than guess (MQ-001).
+**Platform notes:** No payment executes without explicit, confirmed authorisation (NFR-027). The orchestrator carries the conversation context across turns so each clarification builds on the answers already given. Low-confidence intents ask, up to the MQ-001 bound, or decline rather than guess (MQ-001).
 
 ### Component: Capability Registry
 
