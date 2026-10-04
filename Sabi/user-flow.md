@@ -115,13 +115,13 @@ graph TD
 10. System opens Receipt Detail with the FTeR identifier marked verified and shows a success toast.
 
 **Alternate Path A — Low confidence:**
-- At step 2, if confidence is below threshold, Sabi keeps the conversation context and asks a follow-up question in Home with the closest candidates. The user's answer is added to what Sabi already knows, and Sabi asks again while the request stays unclear, up to three clarifying questions in one conversation. If it still cannot resolve after the third, it says so, offers catalogue search and human support, and records the request for coverage. No payment starts.
+- At step 2, if confidence is below threshold, Sabi keeps the conversation context and asks a follow-up question in Home with the closest candidates, authored by the model in natural language. The user's answer is added to what Sabi already knows, and Sabi asks again while the request stays unclear, up to three clarifying questions in one conversation. If it still cannot resolve after the third, it gives the Unresolved reply, authored by the model: it states plainly why it cannot proceed, offers catalogue search and human support, invites the user to continue, and records the request for coverage. The reply and the questions before it are category-neutral. No payment starts.
 
 **Alternate Path B — Multiple matches:**
 - At step 3, a Provider picker sheet lists the top candidates and requires a choice before Payment Confirmation.
 
 **Alternate Path C — Service not covered:**
-- At step 3, if the catalogue has no match, Sabi states the service is not yet covered, records the query for coverage planning, and offers human support. It never fabricates a result.
+- At step 3, if the catalogue has no match, Sabi gives a non-resolving reply, authored by the model, in the register that there is no resolution for that service right now: it states the honest reason, offers catalogue search and human support, invites the user to name the collecting body or another detail, and records the query for coverage planning. It never fabricates a result and never claims the service is unsupported.
 
 **Alternate Path D — Payment declined at the rail:**
 - At step 8, system shows the failure reason and next step in Payment Confirmation. The payment is not marked complete.
@@ -145,13 +145,13 @@ graph TD
 - At step 1, if the device is offline, the request is queued and discovery is unavailable with an offline banner. Authorisation cannot be given offline.
 
 **Alternate Path K — Greeting or non-command message:**
-- At step 1, if the user sends a greeting or other non-command message (for example, "Hello"), Sabi answers conversationally, states what it can do, and invites a request. The message is not treated as a low-confidence intent or a coverage miss, and is not recorded for coverage.
+- At step 1, if the user sends a greeting or other non-command message (for example, "Hello"), Sabi gives a conversational reply, authored by the model: it states what it can do and invites a request, in the sanctioned tone and without assuming any service category. The message is not treated as a low-confidence intent or a coverage miss, and is not recorded for coverage.
 
 ### States & Overlays Referenced
 
 | Screen or Overlay | States |
 |---|---|
-| Home | Default, Composing, Discovery results, Clarifying, Conversational, Not covered, Awaiting FTeR, Offline, Error |
+| Home | Default, Composing, Discovery results, Clarifying, Unresolved, Conversational, No resolution, Awaiting FTeR, Offline, Error |
 | Payment Confirmation | Default, Amount entry, Authorising, Mandate signed, Failure, Reconciling |
 | Identity Verification | Default, Checking, Verified, No match, Provider unavailable |
 | Receipt Detail | Awaiting receipt, Verified, Unverified, Error |
@@ -465,4 +465,5 @@ graph TD
 - An unknown payment outcome is held pending and reconciled, never retried blindly.
 
 ### Language and Fallback
-- Sabi responds in the user's chosen language and falls back to English with a note rather than mis-resolving when a language is unavailable. Every channel honours the same preference.
+- The response language is bound into the model context, so the model speaks the user's chosen language in its authored replies rather than rendering a prewritten localised string. Only static chrome (buttons, labels, and fixed in-app text) is prewritten for latency.
+- Sabi falls back to English with a note rather than mis-resolving when a language is unavailable. Every channel honours the same preference.

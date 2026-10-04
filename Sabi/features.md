@@ -83,7 +83,7 @@ Verifies identity against the national identity infrastructure (NIN, with BVN wh
 As a user, I want to describe what I need to pay in my own words, so that I do not have to learn a menu structure or a portal.
 
 **Description:**
-Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into a structured intent with the target, the amount if stated, and any constraints. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. The assistant converses: it keeps the context of the exchange and, when a request does not resolve, asks follow-up questions that build on what the user has already said rather than restarting. Output contract: structured JSON with intent type, target candidate list, amount in minor units, currency, and confidence; the client renders a confirmation from this structure, not from raw text. Fallback: when confidence is below threshold, Sabi asks a follow-up question with the closest candidates. It may ask up to three clarifying questions in one conversation; if the request is still unresolved after the third, it says so, offers catalogue search and human support, and records the request for coverage rather than guessing. A greeting or other non-command message is answered conversationally, with what Sabi can do and an invitation to state a request, and is never treated as a coverage miss or recorded for coverage. No payment is initiated without explicit confirmation, on any turn.
+Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into the action the client takes. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. The assistant is conversational: the model authors its user-facing replies in natural language (the greeting, the clarifying questions, the refusals, and the non-resolving reply), while structured output carries only the machine-actionable intent the client acts on (the action, target, amount, reference, candidates, and confidence). It keeps the context of the exchange and, when a request does not resolve, asks follow-up questions that build on what the user has already said rather than restarting. The model may phrase its reply freely, but every fact in it (an amount, a reference, a service identifier, a collecting body) comes only from the retrieved context, and it never states one that is not grounded. Fallback: when confidence is below threshold, Sabi asks a follow-up question with the closest candidates. It may ask up to three clarifying questions in one conversation; if the request is still unresolved after the third, it gives a non-resolving reply that states plainly why it cannot proceed, offers catalogue search and human support, and invites the user to continue, rather than guessing. A greeting or other non-command message is answered conversationally, with what Sabi can do and an invitation to state a request, and is never treated as a coverage miss or recorded for coverage. Every non-resolving and conversational reply (the after-bound reply, the greeting reply, and the clarifying question) is honest and specific, names a concrete next step, and is category-neutral: it never assumes or prefers a service category or an identifier type. No payment is initiated without explicit confirmation, on any turn.
 
 **Acceptance criteria:**
 - **Given** a Pidgin request such as "I wan pay my electricity"
@@ -100,17 +100,25 @@ Interprets a free-form request (for example, "pay my land use charge" or "buy fi
   **Then** Sabi asks another, narrowed by the answers already given.
 - **Given** a request still unresolved after three clarifying questions
   **When** the conversation reaches the bound
-  **Then** Sabi states it cannot resolve the request, offers catalogue search and human support, records the request for coverage, and initiates no payment.
+  **Then** Sabi gives a specific reply that states plainly why it cannot proceed and what the user can do next, offers catalogue search and human support, records the request for coverage, initiates no payment, and invites the user to continue in the conversation.
 - **Given** a greeting such as "Hello"
   **When** submitted
   **Then** Sabi responds conversationally with what it can do and an invitation to state a request, and does not record the message as a coverage gap.
+- **Given** a clarifying question, a greeting reply, or an after-bound reply
+  **When** the model authors it
+  **Then** it names the general thing the user must supply (a collecting body's name, a reference, or a corrected detail) and never assumes one service category or identifier type as the default.
+- **Given** a model-authored reply that names an amount, a reference, a service identifier, or a collecting body
+  **When** it is produced
+  **Then** every such fact is present in the retrieved context and none is stated that is not grounded.
 
 **Edge cases and failure states:**
 - Ambiguous target matches several agencies: present the top candidates and require a choice.
 - Model provider unavailable: fall back to keyword and search-based resolution and label the result as unresolved until confirmed.
-- A request that names another person's account: refuse and explain.
+- A request that names another person's account: refuse and explain, with the same honest reason and concrete next step.
 - Non-command message (a greeting, thanks, or small talk): answer conversationally; never count it as a clarification turn, record it for coverage, or start a task.
 - The user stops answering mid-clarification: keep the request on screen, start no task, and record nothing for coverage.
+- A clarifying question or non-resolving reply that would name a category's artefact (for example a meter number): the model replaces it with the general thing the user must supply, so no single category is assumed.
+- A model-authored reply that is missing or unusable, or a model that is unavailable: the client renders its prewritten fallback reply for the state, so the user is never shown a blank turn.
 
 ### FEAT-004: Service, agency, and biller discovery
 
@@ -122,7 +130,7 @@ Interprets a free-form request (for example, "pay my land use charge" or "buy fi
 As a user, I want to search for the right agency, levy, or biller and see what I owe, so that I pay the correct place the first time.
 
 **Description:**
-Resolves a query to a real agency, obligation, or biller from a maintained catalogue, and shows what is known about the obligation (amount where an agency or biller provides it, reference, deadline). Search accepts text, and results show the collecting body and any charge. This serves Ngozi, Ifeoma, and Tunde. Output contract: a ranked list of structured service records with identifiers, collecting body, and known amount in minor units; the client renders selectable results. Fallback: when the catalogue has no match, Sabi says the service is not yet covered and records the request rather than fabricating a result.
+Resolves a query to a real agency, obligation, or biller from a maintained catalogue, and shows what is known about the obligation (amount where an agency or biller provides it, reference, deadline). Search accepts text, and results show the collecting body and any charge. This serves Ngozi, Ifeoma, and Tunde. Output contract: a ranked list of structured service records with identifiers, collecting body, and known amount in minor units; the client renders selectable results, and the model authors the reply that accompanies them. Fallback: when the catalogue has no match, Sabi gives a non-resolving reply in the register that there is no resolution for that service right now (true of the request and forward-looking), offers catalogue search and human support, and invites the user to name the collecting body or another detail, and records the request rather than fabricating a result.
 
 **Acceptance criteria:**
 - **Given** a query "council levy Onitsha"
@@ -137,7 +145,7 @@ Resolves a query to a real agency, obligation, or biller from a maintained catal
 
 **Edge cases and failure states:**
 - Duplicate or renamed agencies: prefer the current registered name and note the former name.
-- No results: record the query for coverage planning and offer human support.
+- No results: record the query for coverage planning, offer human support, and give the non-resolving reply in the register that there is no resolution for that service right now: the honest reason, a concrete next step, and an invitation to continue, with no claim that the service is unsupported.
 - Stale catalogue data: mark records past their refresh window and warn before payment.
 
 ### FEAT-011: Agent-composed interface for task flows

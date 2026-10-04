@@ -27,7 +27,7 @@
 | Service Result Row | List item | Mobile | Show a collecting body and known amount | Resolved discovery (FEAT-004) |
 | Status Pill | Badge | Mobile | Show the state of a recent payment or receipt | Receipt and payment records |
 | Receipt Card | Card | Mobile | Show a recent receipt | Receipt records |
-| Clarification prompt | Inline region | Mobile | Ask a follow-up question with the closest candidates, building on the conversation | Intent resolution (FEAT-003) |
+| Clarification prompt | Inline region | Mobile | Show a model-authored follow-up question with the closest candidates, building on the conversation | Intent resolution (FEAT-003) |
 
 ### Overlays
 
@@ -59,9 +59,10 @@
 | **Loaded** | Activity loaded | Conversation with composed surfaces |
 | **Composing** | A request is being resolved | Composer disabled with progress |
 | **Discovery results** | Matches found | Composed list of Service Result Rows |
-| **Clarifying** | Confidence below threshold | A follow-up question with the closest candidates, up to three in the conversation |
-| **Conversational** | Non-command input such as a greeting | A conversational reply stating what Sabi can do and inviting a request |
-| **Not covered** | No catalogue match | Plain statement, query recorded, human support offered |
+| **Clarifying** | Confidence below threshold and the clarification bound not reached | A model-authored follow-up question with the closest candidates, building on the conversation, up to three in one conversation |
+| **Unresolved** | Still below threshold after the clarification bound | The model-authored after-bound reply: the honest reason, catalogue search and human support, and an invitation to continue |
+| **Conversational** | Non-command input such as a greeting | A model-authored conversational reply stating what Sabi can do and inviting a request |
+| **No resolution** | No catalogue match | The model-authored non-resolving reply: the honest reason, a concrete next step, and an invitation to name the collecting body or another detail |
 | **Offline** | No connectivity | Offline banner; requests queued; no authorisation |
 | **Error** | Resolution failed | Error state with "Try again" |
 
@@ -70,3 +71,26 @@
 - Retrieved content is untrusted and cannot override payment policy.
 - A request that names another person's account → refuse and explain.
 - Very long free-form input → wrap and keep the send action reachable.
+
+### Assistant replies
+
+The assistant's user-facing replies (the greeting, the clarifying question, and the non-resolving replies) are authored by the model in natural language, in the user's language, per [model-quality](../model-quality.md). They are not fixed client strings. This section sets the register the model's reply must satisfy and holds the client's prewritten fallback copy, which is rendered only when no usable model reply arrives or the model is unavailable: a safety net, never the default.
+
+**Register.** Each reply states the honest reason in one or two plain sentences, then a concrete next step the user can act on, then an invitation to continue in the same conversation. Specific, warm, and forward-looking; never apologetic to the point of blame; the reason is given about the request, not the platform. The register is that there is no resolution for that service right now, forward-looking, never a fixed "I searched and found no match", and never a claim that the service is unsupported ("not supported", "not available", "coming soon").
+
+**Neutrality.** No reply and no clarifying question assumes a service category or an identifier type. The user is asked for a collecting body's name, a reference, or a corrected detail as the case requires; electricity and a meter number are one case among many, never the default.
+
+**Fallback copy.** Used only when a model reply is missing or unusable. The model phrases freely within the register above; this copy is the client's last resort, not the wording the model reproduces.
+
+| State | Client fallback copy |
+|---|---|
+| **Unresolved** (after the clarification bound) | "Three answers in and I still can't tell which service you mean, so I haven't started anything with your money. You can search the catalogue yourself, or ask support to take it from here. If you know the collecting body's name, or the reference you're paying, tell me and I'll pick it up." |
+| **No resolution** (no catalogue match) | "There's no resolution for that service right now, so I haven't started anything. Tell me the collecting body's name, the agency, or the reference you're paying, and I'll look again. You can also search the catalogue yourself or reach support." |
+| **Conversational** (non-command, e.g. a greeting) | "I can pay government obligations and everyday bills for you — levies, taxes, airtime, data, a utility, or a biller. Tell me what you need to pay in your own words, English or Pidgin, and I'll take it from there." |
+
+A greeting or other non-command reply may address the user by name when `User.displayName` is present (FEAT-023); otherwise it addresses the user generically and never invents a name.
+
+**Edge Cases:**
+- The after-bound reply must not repeat the last clarifying question or present the same candidates again; it states the bound has been reached and moves to a concrete next step.
+- Human support is offered as a next step and never framed as the only route, so the user can also continue in the conversation.
+- A model reply that is missing, unusable, or arrives when the model is unavailable falls back to the copy above, so no turn is ever blank.

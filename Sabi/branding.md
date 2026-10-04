@@ -285,8 +285,8 @@ This subsection extends the design system to the desktop, pointer-and-keyboard O
 | Direction | LTR only |
 | Text expansion | Allow ~30–40% growth over English; Pidgin often runs longer than English for the same meaning |
 | Formats | Dates, numbers, currency (NGN), and names via locale APIs — never hardcoded |
-| Content | UI strings externalized; no concatenated sentences |
-| Fallback | Fall back to English and show the English string rather than a blank |
+| Content | UI strings externalized; no concatenated sentences. Static chrome (buttons, labels, and fixed in-app text) is prewritten for latency; conversational replies (greeting, clarifying questions, refusals, non-resolving replies) are authored by the model in the user's language, per [model-quality](model-quality.md), and are not fixed strings |
+| Fallback | Static chrome falls back to English and shows the English string rather than a blank; a model reply that is missing or unusable falls back to the client's prewritten reply for the state |
 | Script coverage | All launch and later locales use Latin script; the font must cover Yoruba and Igbo diacritics (ẹ, ọ, ṣ, ụ, ị) |
 
 ## Accessibility
