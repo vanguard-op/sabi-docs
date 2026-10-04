@@ -16,6 +16,8 @@
 
 USSD prompts and WhatsApp messages are channel surfaces owned by their providers; they are content, not screens of the mobile product, and are documented in [user-flow](user-flow.md).
 
+The existing screens are an alternate route to the same tasks, not a fallback. The conversation on Home is a first-class path to every task, composing the task surface inline; Payment Confirmation, Identity Verification, Receipts, Receipt Detail, Case, and Account remain fully functional screens the user may choose instead. Neither path is the fallback for the other: the user chooses, and the app never forces one route.
+
 The Operations Console is a separate staff web surface, specified in [operations-console](operations-console.md). It is not an inventory entry of the mobile product: it has no route here, is not in the navigation map below, and is never exposed to an end user.
 
 ## Navigation Map
@@ -26,28 +28,34 @@ graph TD
     Welcome -->|Sign in| SignIn[Sign In]
     SignIn -->|Passkey or recovery code| Home
     Home -->|Start a payment| PaymentConfirmation[Payment Confirmation]
+    Home -->|Verify identity| IdentityVerification[Identity Verification]
+    Home -->|Open a record| ReceiptDetail[Receipt Detail]
+    Home -->|Resolve a failed payment| Case
     Home -->|Open records| Receipts
     Home -->|Open profile| Account
-    PaymentConfirmation -->|Payment needs KYC| IdentityVerification[Identity Verification]
+    PaymentConfirmation -->|Payment needs KYC| IdentityVerification
     IdentityVerification -->|Verified| PaymentConfirmation
-    PaymentConfirmation -->|Payment accepted| ReceiptDetail[Receipt Detail]
+    PaymentConfirmation -->|Payment accepted| ReceiptDetail
     PaymentConfirmation -->|Unresolved payment| Case
     Receipts -->|Open a receipt| ReceiptDetail
     ReceiptDetail -->|Dispute or reversal| Case
     Account -->|Verify identity| IdentityVerification
 ```
 
+Every edge out of Home is also reachable inside the conversation: Home composes the same task surface inline, and the arrow denotes the alternate screen the user may choose instead. Neither is the fallback for the other.
+
 ## Shared / Common Components
 
 ### Navigation Shell
 Used on: Home, Receipts, Account
 - Mobile: BottomNavigationBar with 3 tabs: Home, Receipts, Account.
-- Hidden on Welcome, Sign In, Payment Confirmation, Identity Verification, and Case, which are task-first surfaces.
+- Hidden on Welcome, Sign In, Payment Confirmation, Identity Verification, and Case. Those screens are alternate destinations the user may choose instead of completing the same task in the conversation; the hidden shell is presentation, not a statement that the conversation is the only route.
 
 ### Composed Task Surface
-Used on: Home, Payment Confirmation
-- The agent-composed container. It renders only components in this catalogue, never a raw message.
+Used on: Home, Payment Confirmation, Identity Verification, Case
+- The agent-composed container. It renders only components in this catalogue, never a raw message. It is the task mechanism: every task and record type is rendered from it, and the prewritten shell around it (composer, navigation, static chrome, fixed buttons and labels) is never composed.
 - Consumes a declarative UI stream: surface creation, components, and data model; the client renders natively with brand tokens.
+- Renders any task surface the catalogue supports: service payment (confirmation, amount entry, provider choice), identity verification, a resolved record such as a receipt lookup, and failed-payment or case recovery.
 - Refuses an unknown component and renders a text-and-form fallback for the same task, so the task stays completable.
 - Discards a malformed UI message without losing the task; renders placeholders for partial data.
 

@@ -83,7 +83,7 @@ Verifies identity against the national identity infrastructure (NIN, with BVN wh
 As a user, I want to describe what I need to pay in my own words, so that I do not have to learn a menu structure or a portal.
 
 **Description:**
-Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into the action the client takes. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. The assistant is conversational: the model authors its user-facing replies in natural language (the greeting, the clarifying questions, the refusals, and the non-resolving reply), while structured output carries only the machine-actionable intent the client acts on (the action, target, amount, reference, candidates, and confidence). It keeps the context of the exchange and, when a request does not resolve, asks follow-up questions that build on what the user has already said rather than restarting. The model may phrase its reply freely, but every fact in it (an amount, a reference, a service identifier, a collecting body) comes only from the retrieved context, and it never states one that is not grounded. Fallback: when confidence is below threshold, Sabi asks a follow-up question with the closest candidates. It may ask up to three clarifying questions in one conversation; if the request is still unresolved after the third, it gives a non-resolving reply that states plainly why it cannot proceed, offers catalogue search and human support, and invites the user to continue, rather than guessing. A greeting or other non-command message is answered conversationally, with what Sabi can do and an invitation to state a request, and is never treated as a coverage miss or recorded for coverage. Every non-resolving and conversational reply (the after-bound reply, the greeting reply, and the clarifying question) is honest and specific, names a concrete next step, and is category-neutral: it never assumes or prefers a service category or an identifier type, and it never substitutes a different specific service for the one the user named. Because naming a specific payee asserts ownership, the assistant never answers a request for one named service by proposing another of the same kind ("Airtel airtime" is never answered by offering "MTN airtime"; "Ikeja Electric" is never answered by offering "Eko Electric"). Asking a neutral, category-neutral disambiguating question ("which network?", "which provider?", "the collecting body's name?") is allowed and encouraged, and offering catalogue search is allowed, because both leave the choice to the user rather than asserting a payee. No payment is initiated without explicit confirmation, on any turn.
+Interprets a free-form request (for example, "pay my land use charge" or "buy five thousand MTN") and turns it into the action the client takes. Handles English and Nigerian Pidgin at launch, including common payment and government vocabulary. The assistant is conversational: the model authors its user-facing replies in natural language (the greeting, the clarifying questions, the refusals, and the non-resolving reply), while structured output carries only the machine-actionable intent the client acts on (the action, target, amount, reference, candidates, and confidence). It keeps the context of the exchange and, when a request does not resolve, asks follow-up questions that build on what the user has already said rather than restarting. The model may phrase its reply freely, but every fact in it (an amount, a reference, a service identifier, a collecting body) comes only from the retrieved context, and it never states one that is not grounded. Fallback: when confidence is below threshold, Sabi asks a follow-up question with the closest candidates. It may ask up to three clarifying questions in one conversation; if the request is still unresolved after the third, it gives a non-resolving reply that states plainly why it cannot proceed, offers catalogue search and human support, and invites the user to continue, rather than guessing. A greeting or other non-command message is answered conversationally, with what Sabi can do and an invitation to state a request, and is never treated as a coverage miss or recorded for coverage. The assistant also resolves a question about a record the user already holds: a lookup such as "show me the receipt for my December NEPA payment" or "did my Airtel top-up go through" is understood as a record lookup, grounded in the user's own records, and answered either by rendering the record inline as a composed surface or by routing the user to the existing screen that shows it, with the choice left to the user and neither route forced. Every non-resolving and conversational reply (the after-bound reply, the greeting reply, and the clarifying question) is honest and specific, names a concrete next step, and is category-neutral: it never assumes or prefers a service category or an identifier type, and it never substitutes a different specific service for the one the user named. Because naming a specific payee asserts ownership, the assistant never answers a request for one named service by proposing another of the same kind ("Airtel airtime" is never answered by offering "MTN airtime"; "Ikeja Electric" is never answered by offering "Eko Electric"). Asking a neutral, category-neutral disambiguating question ("which network?", "which provider?", "the collecting body's name?") is allowed and encouraged, and offering catalogue search is allowed, because both leave the choice to the user rather than asserting a payee. No payment is initiated without explicit confirmation, on any turn.
 
 **Acceptance criteria:**
 - **Given** a Pidgin request such as "I wan pay my electricity"
@@ -104,6 +104,15 @@ Interprets a free-form request (for example, "pay my land use charge" or "buy fi
 - **Given** a greeting such as "Hello"
   **When** submitted
   **Then** Sabi responds conversationally with what it can do and an invitation to state a request, and does not record the message as a coverage gap.
+- **Given** a record lookup such as "show me the receipt for my December NEPA payment"
+  **When** submitted
+  **Then** Sabi resolves it as a record lookup, grounds the answer in the user's own records, and either renders the matching record inline as a composed surface or routes the user to the existing screen that shows it, leaving the choice to the user.
+- **Given** a record lookup such as "did my Airtel top-up go through"
+  **When** submitted
+  **Then** Sabi answers from the source record (state, amount, reference, date) and never from model recall.
+- **Given** a record lookup that matches no record
+  **When** it completes
+  **Then** Sabi says plainly that no matching record was found, composes no record surface, and does not fabricate one.
 - **Given** a clarifying question, a greeting reply, or an after-bound reply
   **When** the model authors it
   **Then** it names the general thing the user must supply (a collecting body's name, a reference, or a corrected detail) and never assumes one service category or identifier type as the default.
@@ -123,6 +132,9 @@ Interprets a free-form request (for example, "pay my land use charge" or "buy fi
 - A clarifying question or non-resolving reply that would name a category's artefact (for example a meter number): the model replaces it with the general thing the user must supply, so no single category is assumed.
 - The user names a specific service that does not resolve ("Airtel airtime" when only "MTN airtime" matches, "Ikeja Electric" when only "Eko Electric" matches): the reply must never offer the different specific service as a substitute, because that asserts ownership and risks sending money to the wrong place. It asks a neutral disambiguating question ("which network?", "which provider?") or offers catalogue search, and the user chooses from real catalogue rows or states the correct payee.
 - A model-authored reply that is missing or unusable, or a model that is unavailable: the client renders its prewritten fallback reply for the state, so the user is never shown a blank turn.
+- A record lookup that matches several records: present the candidates and let the user choose which one to open, rather than guessing.
+- A record lookup raised while a payment task is in progress: answer it without abandoning the open task, and keep the task's place in the conversation.
+- A record the user is not entitled to (another account's reference): never disclose it; return nothing for the mismatched reference.
 
 ### FEAT-004: Service, agency, and biller discovery
 
@@ -156,26 +168,38 @@ Resolves a query to a real agency, obligation, or biller from a maintained catal
 - No results: record the query for coverage planning, offer human support, and give the non-resolving reply in the register that there is no resolution for that service right now: the honest reason, a concrete next step, and an invitation to continue, with no claim that the service is unsupported.
 - Stale catalogue data: mark records past their refresh window and warn before payment.
 
-### FEAT-011: Agent-composed interface for task flows
+### FEAT-011: Agent-composed surface as the task mechanism
 
 **Priority:** P0
 **Effort:** L
 **Depends On:** FEAT-003
 
 **User story:**
-As a user, I want the assistant to show me exactly the form, confirmation, or receipt I need for a task, so that a new provider works without me updating the app.
+As a user, I want the assistant to show me exactly the form, confirmation, receipt, or status I need for any task or record, so that I can get everything done in the conversation and a new provider or record type works without me updating the app.
 
 **Description:**
-Renders task interfaces (confirmation, amount entry, receipt) from the client's approved component catalogue, generated by the agent rather than shipped per provider. The client owns styling and security; the agent may only request components the client exposes. This supports all personas by removing per-provider screens. Output contract: a stream of declarative UI messages (surface creation, components, data model) conforming to the client catalogue; the client renders natively. Fallback: if a surface fails validation or a component is unknown, the client renders a text and form fallback for the same task, and the task remains completable.
+The composed surface is the task mechanism: every task and every record type is rendered from the client's approved component catalogue, generated by the agent rather than shipped per provider or per record kind. It covers every task-shaped surface the product has: service payment (confirmation, amount entry, provider choice), identity verification, failed-payment or case recovery, and the composed rendering of a resolved record such as a receipt or a payment status the user asked about. The client owns styling and security; the agent may only request components the client exposes. The prewritten shell is not composed: the composer, the navigation shell, the static chrome, and fixed buttons and labels stay prewritten client code, and only the task-shaped surface is agent-composed. This supports all personas by removing per-provider and per-record screens. Output contract: a stream of declarative UI messages (surface creation, components, data model) conforming to the client catalogue; the client renders natively. Fallback: if a surface fails validation or a component is unknown, the client renders a text and form fallback for the same task, and the task remains completable.
 
 **Acceptance criteria:**
 - **Given** a service added after the app release
   **When** the user starts a payment to it
-  **Then** the confirmation screen is composed from the client catalogue with no app update.
+  **Then** the confirmation surface is composed from the client catalogue with no app update.
+- **Given** a payment that needs identity verification
+  **When** the user must verify before paying
+  **Then** the verification surface is composed in the conversation and the payment resumes there once verification succeeds.
+- **Given** a failed or reversed payment the user must resolve
+  **When** recovery is needed
+  **Then** the recovery surface is composed in the conversation, showing the current state and the next step.
+- **Given** a resolved record the user asked about
+  **When** the record is rendered
+  **Then** the record surface is composed from the client catalogue with the record's own fields, not only a post-payment receipt.
+- **Given** the prewritten shell
+  **When** any surface is composed
+  **Then** the composer, the navigation shell, the static chrome, and the fixed buttons and labels remain prewritten client code and are not composed by the agent.
 - **Given** an agent UI message requesting an unknown component
   **When** received
   **Then** the client refuses that component and renders the fallback form.
-- **Given** a composed receipt surface
+- **Given** a composed surface
   **When** displayed
   **Then** it uses the client's components and styling.
 
@@ -183,6 +207,8 @@ Renders task interfaces (confirmation, amount entry, receipt) from the client's 
 - Malformed UI message: discard it and render the fallback without losing the task.
 - Partial data model: render placeholders and continue when the missing data arrives.
 - Component requests a permission the client does not grant: refuse and continue with approved components.
+- A task the catalogue has no surface type for: fall back to the prewritten form or the existing screen, so no task becomes unreachable.
+- A record lookup that resolves to no record: compose no record surface and give the conversational reply, rather than a blank or fabricated card.
 
 ## Payments and receipts
 

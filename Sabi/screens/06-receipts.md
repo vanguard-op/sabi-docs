@@ -3,10 +3,10 @@
 **Route:** `/receipts`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Let the user find and open any stored receipt by reference, agency, or date.
+**Purpose:** Let the user find and open any stored receipt by reference, agency, or date. This screen is an alternate surface: a record lookup in the conversation can render a receipt inline or route here, and neither route is the fallback for the other.
 **Visual Focus:** The search field and the list of Receipt Cards beneath it.
 **Action Hierarchy:** Primary: open a receipt; Secondary: search; Tertiary: export.
-**Entry Points:** The Receipts tab of the navigation shell; [Home](03-home.md).
+**Entry Points:** The Receipts tab of the navigation shell; [Home](03-home.md), which may route here from a record lookup in the conversation. The user chooses the route.
 **Exit Points:** [Receipt Detail](07-receipt-detail.md).
 
 ### Layout

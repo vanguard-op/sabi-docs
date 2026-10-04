@@ -12,6 +12,7 @@
 | 6 | Recover a failed or reversed payment | Ngozi | Payment notification or payment status | Refund initiated or a Case opened with a reference and timeline | FEAT-009 |
 | 7 | Pay from abroad and share proof | Tunde | Home | Biller settled in Naira; receipt shared with beneficiary | FEAT-015, FEAT-005, FEAT-008 |
 | 8 | Reach Sabi on WhatsApp | Ngozi | WhatsApp message to the Sabi number | Payment completed and receipt delivered in the chat | FEAT-013 |
+| 9 | Look up a record in the conversation | Ifeoma | Home | The record is shown inline as a composed surface, or the user is routed to the existing screen | FEAT-003, FEAT-008, FEAT-023, FEAT-011 |
 
 These flows serve P0 and reach features. Provider registration (FEAT-012) and third-party receipt verification (FEAT-017) are deliberately not charted here: their actors are providers and businesses, and they depend on [operations](operations.md).
 
@@ -23,7 +24,7 @@ Names set here are canonical and are formalized by the screens document.
 **Route-backed composed surfaces:** Payment Confirmation, Identity Verification, Case.
 **Overlays (never diagram nodes):** Provider picker sheet, Amount entry sheet, Recovery code sheet, Re-authorisation sheet, Success toast, Clarification (an inline state of Home).
 
-Discovery results, the provider picker, and confirmations are composed by the agent from the client component catalogue and render inside Home or as a composed surface. Adding a provider therefore adds no route. USSD and WhatsApp surfaces are owned by their channel providers; their prompts and messages are content, not screens of the mobile product.
+The conversation on Home is the primary path: it composes and completes every task inline and resolves record lookups. Discovery results, the provider picker, confirmations, verification, record viewing, and recovery are composed by the agent from the client component catalogue and render inside Home or as a composed surface. The route-backed surfaces (Payment Confirmation, Identity Verification, Case) and the other screens (Receipts, Receipt Detail, Account) remain fully functional as an alternate route to the same tasks. The user chooses; neither the conversation nor the screen is the fallback for the other. Adding a provider therefore adds no route. USSD and WhatsApp surfaces are owned by their channel providers; their prompts and messages are content, not screens of the mobile product.
 
 Across every flow the motion character is calm and purposeful ([branding](branding.md)): a payment confirmation lands with weight rather than celebration.
 
@@ -91,12 +92,12 @@ graph TD
     A -->|No| Home
     A -->|Yes| B{Agency or obligation matched?}
     B -->|No| Home
-    B -->|Yes| C[Payment Confirmation]
+    B -->|Yes| C[Confirmation: composed inline or Payment Confirmation]
     C --> D{KYC required and unverified?}
-    D -->|Yes| V[Identity Verification]
+    D -->|Yes| V[Identity Verification: composed inline or the screen]
     V --> C
     D -->|No| E{Authorise payment}
-    E -->|Confirmed| G[Receipt Detail]
+    E -->|Confirmed| G[Receipt Detail: composed inline or the screen]
     E -->|Declined| C
 ```
 
@@ -107,12 +108,12 @@ graph TD
 2. System resolves the request to a structured intent with target candidates and a confidence value. Above threshold, it proceeds.
 3. Home renders a composed discovery surface listing the matching agency or obligation with the collecting body and any known amount.
 4. User selects the target.
-5. Home renders the route-backed Payment Confirmation surface with the amount, payer reference, charges, and payee.
+5. Home composes the confirmation surface inline in the conversation with the amount, payer reference, charges, and payee, and takes authorisation there. The user may instead choose the Payment Confirmation screen, which offers the same task; neither route is the fallback for the other.
 6. If the obligation requires a reference number the user does not have, Home explains how to obtain it and does not start a payment.
 7. User authorises. System signs a mandate bound to the amount, the payee, and the user.
 8. System executes the payment through the licensed rail and returns a transaction reference.
 9. On success, system retrieves the FTeR from the central platform and stores it against the obligation.
-10. System opens Receipt Detail with the FTeR identifier marked verified and shows a success toast.
+10. The receipt is shown either as a composed surface inline in the conversation or on Receipt Detail, whichever the user chooses, with the FTeR identifier marked verified and a success toast.
 
 **Alternate Path A — Low confidence:**
 - At step 2, if confidence is below threshold, Sabi keeps the conversation context and asks a follow-up question in Home with the closest candidates, authored by the model in natural language. The user's answer is added to what Sabi already knows, and Sabi asks again while the request stays unclear, up to three clarifying questions in one conversation. If it still cannot resolve after the third, it gives the Unresolved reply, authored by the model: it states plainly why it cannot proceed, offers catalogue search and human support, invites the user to continue, and records the request for coverage. The reply and the questions before it are category-neutral, and none of them substitutes a different specific service for the one the user named: a request for "Airtel airtime" is never answered by offering "MTN airtime", and "Ikeja Electric" is never answered by offering "Eko Electric". A neutral disambiguating question ("which network?", "which provider?") or catalogue search is given instead, so the user chooses rather than being handed a payee. No payment starts.
@@ -124,10 +125,10 @@ graph TD
 - At step 3, if the catalogue has no match, Sabi gives a non-resolving reply, authored by the model, in the register that there is no resolution for that service right now: it states the honest reason, offers catalogue search and human support, invites the user to name the collecting body or another detail, and records the query for coverage planning. It never fabricates a result and never claims the service is unsupported. It also never substitutes a different specific service for the one the user named: a query for "Airtel airtime" is never answered by offering "MTN airtime", and "Ikeja Electric" is never answered by offering "Eko Electric".
 
 **Alternate Path D — Payment declined at the rail:**
-- At step 8, system shows the failure reason and next step in Payment Confirmation. The payment is not marked complete.
+- At step 8, system shows the failure reason and next step in the composed confirmation surface inline, or on Payment Confirmation if the user chose the screen. The payment is not marked complete.
 
 **Alternate Path E — Unknown outcome or timeout:**
-- At step 8, on a rail timeout with unknown outcome, system marks the payment pending, does not retry immediately, and reconciles before informing the user. An unresolved payment opens a Case (see Flow 6).
+- At step 8, on a rail timeout with unknown outcome, system marks the payment pending, does not retry immediately, and reconciles before informing the user. An unresolved payment opens a recovery surface, composed inline in the conversation or shown on Case (see Flow 6); the user chooses the route.
 
 **Alternate Path F — Succeeded but no FTeR yet:**
 - At step 9, if the FTeR has not arrived, Receipt Detail shows the official receipt as pending and keeps checking. The receipt appears when the central platform returns it. Receipt coverage target is 100% at launch (success metrics).
@@ -151,12 +152,12 @@ graph TD
 
 | Screen or Overlay | States |
 |---|---|
-| Home | Default, Composing, Discovery results, Clarifying, Unresolved, Conversational, No resolution, Awaiting FTeR, Offline, Error |
+| Home | Default, Composing, Discovery results, Confirmation inline, Verifying inline, Recovering inline, Clarifying, Unresolved, Conversational, No resolution, Awaiting FTeR, Offline, Error |
 | Payment Confirmation | Default, Amount entry, Authorising, Mandate signed, Failure, Reconciling |
 | Identity Verification | Default, Checking, Verified, No match, Provider unavailable |
 | Receipt Detail | Awaiting receipt, Verified, Unverified, Error |
 | Provider picker sheet (overlay on Home) | Default |
-| Amount entry sheet (overlay on Payment Confirmation) | Default, Validation error |
+| Amount entry sheet (overlay on Home or Payment Confirmation) | Default, Validation error |
 | Success toast (overlay) | — |
 
 ## Flow 3: Pay an everyday bill
@@ -172,11 +173,11 @@ graph TD
     Home[Home] --> A{Intent resolved above confidence?}
     A -->|No| Home
     A -->|Yes| B[Biller matched]
-    B --> C[Payment Confirmation]
+    B --> C[Confirmation: composed inline or Payment Confirmation]
     C --> D{Amount known?}
     D -->|No| C
     D -->|Yes| E{Authorise payment}
-    E -->|Confirmed| G[Receipt Detail]
+    E -->|Confirmed| G[Receipt Detail: composed inline or the screen]
     E -->|Declined| C
 ```
 
@@ -185,11 +186,11 @@ graph TD
 **Happy Path:**
 1. On Home the user states the purchase, for example "buy five thousand MTN" or "buy electricity".
 2. System resolves the adapter or biller and the product category.
-3. System renders Payment Confirmation with the biller, the recipient identifier, the amount, and any charge.
-4. If the amount is variable, the Amount entry sheet collects it.
+3. Home composes the confirmation surface inline in the conversation with the biller, the recipient identifier, the amount, and any charge; the user may instead choose the Payment Confirmation screen, which offers the same task.
+4. If the amount is variable, the Amount entry sheet collects it, over the composed surface or over Payment Confirmation.
 5. User authorises; system signs a mandate and executes the payment through the licensed rail.
 6. System returns and stores the token or confirmation with the receipt.
-7. System opens Receipt Detail and shows a success toast.
+7. The receipt is shown either as a composed surface inline or on Receipt Detail, whichever the user chooses, with a success toast.
 
 **Alternate Path A — Wrong identifier before execution:**
 - At step 3, a wrong meter or phone number may be corrected or cancelled only before execution. After execution the payment is not reversible by editing.
@@ -210,10 +211,10 @@ graph TD
 
 | Screen or Overlay | States |
 |---|---|
-| Home | Default, Composing, Discovering, Offline |
+| Home | Default, Composing, Discovering, Confirmation inline, Offline |
 | Payment Confirmation | Default, Amount entry, Authorising, Awaiting token, Failure |
 | Receipt Detail | Token returned, Awaiting token, Verified, Error |
-| Amount entry sheet (overlay on Payment Confirmation) | Default, Validation error |
+| Amount entry sheet (overlay on Home or Payment Confirmation) | Default, Validation error |
 | Success toast (overlay) | — |
 
 ## Flow 4: Pay by USSD with no data
@@ -273,15 +274,15 @@ graph TD
 ## Flow 5: Verify identity for a regulated payment
 
 **Persona:** Ifeoma
-**Entry Point:** A payment that requires KYC (Payment Confirmation), or Account
+**Entry Point:** A payment that requires KYC (composed inline on Home, or Payment Confirmation), or Account
 **Outcome:** The account is verified and the held payment resumes
 
 ### Diagram
 
 ```mermaid
 graph TD
-    A[Account] -->|Verify identity| V[Identity Verification]
-    C[Payment Confirmation] -->|Payment needs KYC| V
+    A[Account] -->|Verify identity| V[Identity Verification: composed inline or the screen]
+    C[Payment: inline or Payment Confirmation] -->|Payment needs KYC| V
     V -->|Verified| C
     V -->|Verified from Account| A
 ```
@@ -290,10 +291,10 @@ graph TD
 
 **Happy Path:**
 1. A payment that requires KYC is held rather than failed; the user is told verification is needed.
-2. System opens Identity Verification.
+2. System composes the verification surface inline in the conversation on Home, or opens Identity Verification if the user chose the screen; neither route is the fallback for the other.
 3. User provides their NIN, and their BVN where the payment rail requires it.
 4. System checks the details against the national identity provider and stores a verification status on the account.
-5. On a match, the held payment resumes on Payment Confirmation without re-entering details.
+5. On a match, the held payment resumes in the same conversation without re-entering details.
 
 **Alternate Path A — No match:**
 - At step 4, if the check returns no match, the user sees a plain reason and may correct details once; a second failure routes to support.
@@ -312,7 +313,7 @@ graph TD
 | Screen or Overlay | States |
 |---|---|
 | Identity Verification | Default, Checking, Verified, No match, Pending provider, Error |
-| Payment Confirmation | Held for KYC, Resumed |
+| Payment: composed inline or Payment Confirmation | Held for KYC, Resumed |
 | Account | Unverified, Pending, Verified, Rejected, Suspended |
 
 ## Flow 6: Recover a failed or reversed payment
@@ -325,7 +326,7 @@ graph TD
 
 ```mermaid
 graph TD
-    Home[Home] -->|Open payment status| Case[Case]
+    Home[Home] -->|Open payment status| Case[Recovery: composed inline or Case]
     Receipts[Receipts] -->|Open payment| Case
     Case --> A{Debited but not delivered?}
     A -->|Yes| R[Refund initiated]
@@ -336,11 +337,11 @@ graph TD
 ### Walkthrough
 
 **Happy Path:**
-1. User opens a payment from Home or Receipts and lands on Case.
-2. Case shows the current state and the last update time.
+1. User opens a payment from Home, where the recovery surface is composed inline in the conversation, or from Receipts, which leads to Case. The user chooses the route; neither is the fallback for the other.
+2. Recovery shows the current state and the last update time.
 3. System detects a debit without delivery.
 4. System initiates a refund with the rail or the biller and opens a case keyed by reference.
-5. System reports progress and a firm expected timeline, and notifies the user on their preferred channel.
+5. System reports progress and a firm expected timeline, in the conversation and by notification on the user's preferred channel.
 
 **Alternate Path A — Rail and biller disagree:**
 - At step 3, if the rail reports success and the biller reports failure, system reconciles against both sources before refunding.
@@ -359,7 +360,7 @@ graph TD
 | Screen or Overlay | States |
 |---|---|
 | Case | Pending, Reconciling, Refund initiated, Awaiting biller, Escalated, Resolved |
-| Home | Loaded, Offline |
+| Home | Loaded, Recovering inline, Offline |
 | Receipts | Loading, Loaded, Empty, Error |
 | Notification | Queued, Delivered, Delayed |
 
@@ -373,8 +374,8 @@ graph TD
 
 ```mermaid
 graph TD
-    Home[Home] --> PC[Payment Confirmation]
-    PC -->|Authorise with a foreign method| G[Receipt Detail]
+    Home[Home] --> PC[Confirmation: composed inline or Payment Confirmation]
+    PC -->|Authorise with a foreign method| G[Receipt Detail: composed inline or the screen]
     PC -->|Declined| PC
     G -->|Share| G
 ```
@@ -383,10 +384,10 @@ graph TD
 
 **Happy Path:**
 1. User states the Nigerian obligation to settle from abroad.
-2. System resolves the biller and renders Payment Confirmation with the amount, the FX rate, any fee, and the total in both currencies.
+2. System resolves the biller and composes the confirmation surface inline in the conversation, or shows Payment Confirmation if the user chose the screen, with the amount, the FX rate, any fee, and the total in both currencies.
 3. User authorises from a foreign card or transfer.
 4. System settles the biller in Naira.
-5. System stores the receipt and makes it available to the sender and the beneficiary.
+5. System stores the receipt and makes it available to the sender and the beneficiary, inline in the conversation or on Receipt Detail, whichever the user chooses.
 
 **Alternate Path A — FX or settlement delay:**
 - At step 4, if settlement is delayed, system shows the true status and the expected timing rather than a false success.
@@ -401,7 +402,7 @@ graph TD
 
 | Screen or Overlay | States |
 |---|---|
-| Home | Default, Composing, Offline |
+| Home | Default, Composing, Confirmation inline, Offline |
 | Payment Confirmation | Default, FX quoted, Authorising, Declined, Settling |
 | Receipt Detail | Settled, Pending settlement, Share sheet open |
 
@@ -447,6 +448,57 @@ graph TD
 | WhatsApp: Link account | Default, Pending, Linked, Error |
 | WhatsApp: Resolve and confirm | Resolving, Clarifying, Confirming, Authorising |
 | WhatsApp: Receipt delivered | Delivered, Retrying, Failed |
+
+## Flow 9: Look up a record in the conversation
+
+**Persona:** Ifeoma
+**Entry Point:** Home
+**Outcome:** The record is rendered inline as a composed surface, or the user is routed to the existing screen; the choice is left to the user
+
+### Diagram
+
+```mermaid
+graph TD
+    Home[Home] --> A{Record lookup resolved?}
+    A -->|No match| Home
+    A -->|Ambiguous| P[Present candidates] --> Home
+    A -->|Matched| B{Render inline or route?}
+    B -->|Inline| R[Composed record surface in the conversation]
+    B -->|Route| S[Receipts or Receipt Detail]
+```
+
+### Walkthrough
+
+**Happy Path:**
+1. On Home the user asks about a record they hold: "show me the receipt for my December NEPA payment" or "did my Airtel top-up go through".
+2. System resolves the request as a record lookup and grounds it in the user's own records (receipts, payments, and obligations), never in model recall.
+3. On a single match, Home composes the record inline as a composed surface, showing that record's own fields: for a receipt, its reference, amount, payee, date, and verification state; for a payment status, its current state and last update.
+4. The user may instead choose the existing screen (Receipts or Receipt Detail) to see the same record; neither route is the fallback for the other.
+5. The user can act on the record from where it is shown: share or export a receipt, or open the related case.
+
+**Alternate Path A: No matching record:**
+- At step 3, if no record matches, Sabi says plainly that no matching record was found, composes no record surface, and does not fabricate one. It invites the user to refine the reference, the payee, or the date.
+
+**Alternate Path B: Several matches:**
+- At step 3, if the lookup matches several records, Home presents the candidates and the user chooses which to open, rather than guessing.
+
+**Alternate Path C: Record raised mid-task:**
+- If the user asks about a record while a payment task is open, the lookup is answered without abandoning the task; the open task keeps its place in the conversation.
+
+**Alternate Path D: Record not the user's:**
+- If the lookup names a reference on another account, nothing is disclosed and no record is returned for the mismatched reference.
+
+**Alternate Path E: Offline:**
+- If offline, cached records are shown where available, with an offline banner and no new actions.
+
+### States & Overlays Referenced
+
+| Screen or Overlay | States |
+|---|---|
+| Home | Default, Composing, Record lookup, Record rendered inline, No record found, Offline, Error |
+| Receipts | Loading, Loaded, Empty, No results, Error |
+| Receipt Detail | Loaded, Awaiting receipt, Verified, Unverified, Error |
+| Share sheet (overlay on Home or Receipt Detail) | Default |
 
 ## Global Flows
 

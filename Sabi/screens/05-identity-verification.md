@@ -3,11 +3,11 @@
 **Route:** `/account/verify`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Verify the user's identity once against the national identity infrastructure, so regulated payments can proceed.
+**Purpose:** Verify the user's identity once against the national identity infrastructure, so regulated payments can proceed. This screen is an alternate surface: verification can also be composed inline in the conversation on Home, and neither route is the fallback for the other.
 **Visual Focus:** The verification status and the single verify action.
 **Action Hierarchy:** Primary: Verify; Secondary: correct details; Tertiary: how identity data is used.
-**Entry Points:** [Account](09-account.md); [Payment Confirmation](04-payment-confirmation.md) when a payment requires KYC.
-**Exit Points:** [Payment Confirmation](04-payment-confirmation.md) to resume a held payment; [Account](09-account.md).
+**Entry Points:** [Account](09-account.md); [Payment Confirmation](04-payment-confirmation.md) when a payment requires KYC; [Home](03-home.md), composed inline in the conversation. The user chooses the route.
+**Exit Points:** [Payment Confirmation](04-payment-confirmation.md) to resume a held payment; [Account](09-account.md). A held payment also resumes inline in the conversation.
 
 ### Layout
 

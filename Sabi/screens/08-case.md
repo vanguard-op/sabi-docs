@@ -3,10 +3,10 @@
 **Route:** `/cases/:caseId`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Show the true state of a failed or reversed payment and drive a refund or reconciliation to a resolution.
+**Purpose:** Show the true state of a failed or reversed payment and drive a refund or reconciliation to a resolution. This screen is an alternate surface: recovery can also be composed inline in the conversation on Home, and neither route is the fallback for the other.
 **Visual Focus:** The current payment state and its firm expected timeline.
 **Action Hierarchy:** Primary: none required (a status screen); Secondary: contact support; Tertiary: view the related receipt.
-**Entry Points:** [Home](03-home.md), [Receipt Detail](07-receipt-detail.md), a payment notification.
+**Entry Points:** [Home](03-home.md), in the conversation as a composed recovery surface or as the alternate screen, left to the user; [Receipt Detail](07-receipt-detail.md); a payment notification.
 **Exit Points:** [Receipt Detail](07-receipt-detail.md); back to the previous screen.
 
 ### Layout

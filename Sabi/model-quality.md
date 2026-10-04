@@ -39,6 +39,8 @@ This document defines the behavior and quality contract for the model-backed cap
 **Refusal:** The model must not request a component outside the catalogue and must not embed executable code, scripts, or external resource loads in any message. A request outside the catalogue is refused by the client.
 **Fallback:** The client renders its static fallback form for the same task, so the task remains completable even if no valid surface arrives.
 
+> **Contract impact (C-012).** The composed surface is the task mechanism for every task and record type, not only task flows. C-012's `task` enum is currently `confirmation|amount_entry|receipt|discovery` and must gain `verification` and `recovery`; and `receipt` must accept a context carrying a resolved record reference from a record lookup, not only a post-payment service payment. `CONTRACTS.md` is not written here; this note is for the lead to revise C-012.
+
 ### MQ-004: Nigerian-language understanding
 
 **Output:** The same contract as MQ-001: a model-authored `reply` in the user's language, plus the reduced structured intent including `detected_language` (one of `en`, `pcm`, `ha`, `yo`, `ig`).

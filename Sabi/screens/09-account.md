@@ -3,7 +3,7 @@
 **Route:** `/account`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Manage identity, linked channels, and payment methods, and show verification and account status.
+**Purpose:** Manage identity, linked channels, and payment methods, and show verification and account status. Account remains fully functional; identity verification is also reachable inline in the conversation, and neither route is the fallback for the other.
 **Visual Focus:** The verification status and the single action it implies.
 **Action Hierarchy:** Primary: Verify identity (when unverified); Secondary: link a channel; Tertiary: manage methods and sign out.
 **Entry Points:** The Account tab of the navigation shell; [Home](03-home.md).

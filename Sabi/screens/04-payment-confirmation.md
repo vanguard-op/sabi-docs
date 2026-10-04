@@ -3,11 +3,11 @@
 **Route:** `/pay/:intentId`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Show the amount, payee, and charges for a resolved obligation and take explicit authorisation.
+**Purpose:** Show the amount, payee, and charges for a resolved obligation and take explicit authorisation. This screen is an alternate surface: the same confirmation can be composed inline in the conversation on Home, and neither route is the fallback for the other.
 **Visual Focus:** The Confirmation Summary with the total amount.
 **Action Hierarchy:** Primary: Authorise payment; Secondary: change the amount (variable bills); Tertiary: view charges and terms.
-**Entry Points:** [Home](03-home.md).
-**Exit Points:** [Identity Verification](05-identity-verification.md) when KYC is required; [Receipt Detail](07-receipt-detail.md) on success; [Case](08-case.md) when the outcome is unresolved; [Home](03-home.md) on back.
+**Entry Points:** [Home](03-home.md), in the conversation or as the alternate screen. The user chooses.
+**Exit Points:** [Identity Verification](05-identity-verification.md) when KYC is required; [Receipt Detail](07-receipt-detail.md) on success; [Case](08-case.md) when the outcome is unresolved; [Home](03-home.md) on back. Each of these is also reachable inline, and the user chooses the route.
 
 ### Layout
 

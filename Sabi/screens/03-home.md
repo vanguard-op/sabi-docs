@@ -3,11 +3,11 @@
 **Route:** `/home`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Let the user state what they need to pay in their own words, resolve it, and reach confirmation.
+**Purpose:** Let the user state what they need to pay in their own words, resolve it, and reach confirmation. Home is also the primary path: it composes and completes every task inline in the conversation, and resolves record lookups, with the existing screens kept as an equal alternate route the user may choose.
 **Visual Focus:** The composer at the base of the screen and the composed surface it produces above.
 **Action Hierarchy:** Primary: Send; Secondary: select a discovery result; Tertiary: clarify or ask for help.
 **Entry Points:** [Welcome](01-welcome.md), [Sign In](02-sign-in.md), the Home tab of the navigation shell, [Payment Confirmation](04-payment-confirmation.md) back action.
-**Exit Points:** [Payment Confirmation](04-payment-confirmation.md), [Receipts](06-receipts.md), [Account](09-account.md), [Case](08-case.md).
+**Exit Points:** Every task is completable inline; the user may instead choose the alternate screen: [Payment Confirmation](04-payment-confirmation.md), [Identity Verification](05-identity-verification.md), [Receipts](06-receipts.md), [Receipt Detail](07-receipt-detail.md), [Case](08-case.md), [Account](09-account.md). Neither the conversation nor the screen is the fallback for the other.
 
 ### Layout
 
@@ -17,13 +17,14 @@
 - A composer TextField pinned above the navigation shell, with a send action.
 - BottomNavigationBar with 3 tabs: Home, Receipts, Account.
 - An inline clarification region appears within the conversation when confidence is low.
+- A Composed Task Surface appears inline for any task the user starts or completes in the conversation: payment, identity verification, viewing a record, or recovery.
 
 ### Components
 
 | Component | Type | Platform | Purpose | Data Source |
 |---|---|---|---|---|
 | Composer | TextField | Mobile | Take a free-form request in English or Pidgin | User input |
-| Composed Task Surface | Container | Mobile | Render the agent-composed result, list, or prompt | Agent UI stream (FEAT-011) |
+| Composed Task Surface | Container | Mobile | Render the agent-composed result, task, record, or prompt inline | Agent UI stream (FEAT-011) |
 | Service Result Row | List item | Mobile | Show a collecting body and known amount | Resolved discovery (FEAT-004) |
 | Status Pill | Badge | Mobile | Show the state of a recent payment or receipt | Receipt and payment records |
 | Receipt Card | Card | Mobile | Show a recent receipt | Receipt records |
@@ -42,13 +43,16 @@
 - Recent receipts and payment statuses (max 10) — from receipt and payment records
 - Catalogue matches for a request — from service search (FEAT-004)
 - Resolved intent with candidates and confidence — from model serving (FEAT-003)
+- The user's own records for a record lookup: from receipt, payment, and account records (FEAT-023)
 
 **Data Flow:**
 1. Screen mounts → show loading, then recent activity or the empty state.
 2. User submits a request → resolve intent → render the composed surface.
 3. Multiple matches → provider picker; single match → continue.
-4. Reaching confirmation → navigate to Payment Confirmation.
-5. Failure → inline error with retry, preserving the request.
+4. A task completes inline: the composed surface carries confirmation, amount entry, provider choice, verification, record viewing, or recovery in the conversation, with no navigation required.
+5. A record lookup → ground in the user's records → render the record inline as a composed surface, or route the user to the existing screen, leaving the choice to the user.
+6. The user may instead choose the alternate screen at any point; neither route is the fallback for the other.
+7. Failure → inline error with retry, preserving the request.
 
 ### States
 
@@ -59,6 +63,10 @@
 | **Loaded** | Activity loaded | Conversation with composed surfaces |
 | **Composing** | A request is being resolved | Composer disabled with progress |
 | **Discovery results** | Matches found | Composed list of Service Result Rows |
+| **Confirmation inline** | A payment is resolved and awaiting authorisation | The composed confirmation surface in the conversation, with amount entry and provider choice as needed |
+| **Verifying inline** | A task requires identity verification | The composed verification surface in the conversation; the task is held, not failed |
+| **Record lookup** | A record lookup resolved to a match | The record rendered inline as a composed surface, or a route to the existing screen, left to the user |
+| **Recovering inline** | A payment failed or was reversed | The composed recovery surface in the conversation, showing state and next step |
 | **Clarifying** | Confidence below threshold and the clarification bound not reached | A model-authored follow-up question with the closest candidates, building on the conversation, up to three in one conversation |
 | **Unresolved** | Still below threshold after the clarification bound | The model-authored after-bound reply: the honest reason, catalogue search and human support, and an invitation to continue |
 | **Conversational** | Non-command input such as a greeting | A model-authored conversational reply stating what Sabi can do and inviting a request |
@@ -70,6 +78,8 @@
 - Ambiguous target matching several agencies → present the top candidates and require a choice.
 - Retrieved content is untrusted and cannot override payment policy.
 - A request that names another person's account → refuse and explain.
+- A record lookup that matches several records → present the candidates and let the user choose which to open.
+- A record lookup raised mid-task → answer it without abandoning the open task.
 - Very long free-form input → wrap and keep the send action reachable.
 
 ### Assistant replies
