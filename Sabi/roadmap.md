@@ -25,12 +25,14 @@ gantt
     Receipts                     :f008, after f005, 20d
     Failed payment recovery      :f009, after f005, 30d
     USSD and SMS                 :f010, after f005, 35d
+    Account grounding            :f023, after f008, 25d
     section Phase 3: Reach and trust
     WhatsApp channel             :f013, 2027-04-01, 25d
     Reminders                    :f014, after f013, 20d
     Diaspora payer mode          :f015, after f013, 20d
     Language expansion           :f016, 2027-04-01, 60d
     Receipt verification         :f017, after f014, 20d
+    Assistant long-term memory   :f024, after f013, 25d
     section Phase 4: Growth
     Group payment pools          :f018, 2027-07-01, 25d
     Merchant discovery           :f019, after f018, 35d
@@ -79,6 +81,7 @@ gantt
 | FEAT-008 | Verifiable receipt capture and retrieval | The proof users and businesses need |
 | FEAT-009 | Payment status, failure, and refund handling | Addresses the trust problem the market complains about |
 | FEAT-010 | USSD and SMS channel | Reaches feature-phone users without data |
+| FEAT-023 | Account grounding in the assistant | Answers cite the user's own receipts and obligations, and the user is addressed by name |
 
 This phase cannot ship without the licensed payment partner, the regularised government collection channel, and the identity verification path. These are tracked as dependencies in [overview](overview.md).
 
@@ -102,6 +105,7 @@ This phase cannot ship without the licensed payment partner, the regularised gov
 | FEAT-015 | Diaspora payer mode | Serves a paying segment abroad |
 | FEAT-016 | Language expansion | Makes the assistant usable beyond English |
 | FEAT-017 | Receipt verification for third parties | Lets businesses verify a receipt without a call |
+| FEAT-024 | Assistant long-term memory | Stops repeated corrections and preferences across sessions |
 
 ## Phase 4: Growth
 

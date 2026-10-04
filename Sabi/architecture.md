@@ -56,9 +56,9 @@ The system is one deployable application that owns identity, catalogue, the agen
 ### Component: Agent Orchestrator
 
 **Responsibility:** Turns a request into a task, resolves intent, calls capabilities, and enforces refusal.
-**Provides:** Task lifecycle, intent resolution, multi-turn clarification, capability invocation, and the confirmation gate before payment.
-**Consumes:** Model serving, retrieval index, capability registry, service catalogue, payment module, receipt service.
-**Platform notes:** No payment executes without explicit, confirmed authorisation (NFR-027). The orchestrator carries the conversation context across turns so each clarification builds on the answers already given. Low-confidence intents ask, up to the MQ-001 bound, or decline rather than guess (MQ-001).
+**Provides:** Task lifecycle, intent resolution, multi-turn clarification, capability invocation, account-grounded answers, consent-gated durable memory, and the confirmation gate before payment.
+**Consumes:** Model serving, retrieval index, capability registry, service catalogue, payment module, receipt service, user account context (identity summary, verification status, receipts, obligations), and persisted memory (preferences, corrections).
+**Platform notes:** No payment executes without explicit, confirmed authorisation (NFR-027). The orchestrator carries the conversation context across turns so each clarification builds on the answers already given. Low-confidence intents ask, up to the MQ-001 bound, or decline rather than guess (MQ-001). Each turn it assembles a bounded account context for the asking user and passes it to the model as retrieved, citable content, so an answer about the user's own receipts or obligations comes from the source record rather than model recall (FEAT-023). Durable memory is captured only from an explicit user statement or a user-confirmed correction, is advisory rather than a source of fact, and is subject to the NDPA consent, retention, and deletion rules (FEAT-024, NFR-040).
 
 ### Component: Capability Registry
 
@@ -104,10 +104,10 @@ The system is one deployable application that owns identity, catalogue, the agen
 
 ### Component: Retrieval Index
 
-**Responsibility:** Grounds model output in the product's own catalogue and receipt data.
-**Provides:** Retrieval of service records and supporting content for grounding.
-**Consumes:** Service catalogue, receipt service.
-**Platform notes:** Retrieved content is untrusted and cannot override payment policy (R-011).
+**Responsibility:** Grounds model output in the product's own catalogue, receipt, and account data.
+**Provides:** Retrieval of service records, supporting content, and the asking user's account records and memory for grounding.
+**Consumes:** Service catalogue, receipt service, user account records, and durable memory store.
+**Platform notes:** Retrieved content is untrusted and cannot override payment policy (R-011). Account context and memory are retrieved under the same rule: cited, never recalled, and never a source of a payment fact; memory narrows or pre-fills a resolution but the catalogue and payment source win (FEAT-023, FEAT-024).
 
 ### Component: Evaluation Harness
 
@@ -143,7 +143,7 @@ The system is one deployable application that owns identity, catalogue, the agen
 
 | Store | Type | What it holds | Access pattern |
 |---|---|---|---|
-| Primary database | Relational | Users, credentials, channel links, verification status, services, providers, capabilities, payment methods, payments, receipts, cases, reminders, pools | Read-heavy, moderate writes |
+| Primary database | Relational | Users, credentials, channel links, verification status, services, providers, capabilities, payment methods, payments, receipts, cases, reminders, pools, user preferences, durable memory items | Read-heavy, moderate writes |
 | Payment records store | Relational, isolated | Payment state, payment events, mandates, and the payment audit log | Strict transactional writes, append-only audit |
 | Cache | In-memory | Sessions, rate-limit counters, hot catalogue entries | Fast reads, TTL expiry |
 | Object storage | Object store | Receipt documents and generated files | Write-once, read-many |
@@ -273,6 +273,9 @@ graph TD
     Orq --> Rec
     Orq --> Cache
     Orq --> Analytics
+
+    Orq -.->|account context and memory| DB
+    Retrieval -.->|grounding reads| DB
     IDV --> DB
     IDV --> IDP
     Cat --> DB

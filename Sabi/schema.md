@@ -445,6 +445,56 @@ The model is flat and referential, targeting a relational primary database with 
 }
 ```
 
+### UserPreference
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/user-preference.schema.json",
+  "title": "UserPreference",
+  "description": "A stated, durable preference for a user, held across sessions so the assistant does not ask again. Captured only from an explicit user statement or a user-confirmed choice, and advisory: it narrows or pre-fills a resolution but never supplies a fact and never overrides the catalogue or the confirmation gate (FEAT-024).",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the preference." },
+    "userId": { "type": "string", "description": "References the User who stated the preference." },
+    "kind": { "type": "string", "enum": ["default_biller", "preferred_channel", "default_payment_method", "language"], "description": "What the preference is about." },
+    "serviceId": { "type": ["string", "null"], "description": "References the Service the preference names, when it names one, such as a default biller; null otherwise." },
+    "value": { "type": "string", "description": "The stated preference value, such as a service name or a channel.", "x-personal-data": true },
+    "source": { "type": "string", "enum": ["user_stated", "user_confirmed"], "description": "How the preference entered memory; never inferred silently." },
+    "status": { "type": "string", "enum": ["active", "withdrawn"], "description": "Preference lifecycle state; withdrawn means consent was withdrawn or the user deleted it, and it no longer affects answers." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." },
+    "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time (UTC)." }
+  },
+  "required": ["id", "userId", "kind", "value", "source", "status", "createdAt", "updatedAt"]
+}
+```
+
+### MemoryItem
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/sabi/memory-item.schema.json",
+  "title": "MemoryItem",
+  "description": "A durable correction or decision a user has confirmed and the assistant remembers across sessions. Captured only from an explicit user statement or a user-confirmed correction, and advisory: it never supplies a fact and never overrides a source record or the confirmation gate (FEAT-024).",
+  "type": "object",
+  "properties": {
+    "id": { "type": "string", "description": "Stable identifier for the memory item." },
+    "userId": { "type": "string", "description": "References the User the memory belongs to." },
+    "kind": { "type": "string", "enum": ["correction", "decision"], "description": "Kind of memory: a corrected detail or a stated decision." },
+    "subject": { "type": "string", "description": "What the memory is about, such as a meter number or an amount threshold.", "x-personal-data": true },
+    "value": { "type": "string", "description": "The confirmed value for the subject, stored as text.", "x-personal-data": true },
+    "serviceId": { "type": ["string", "null"], "description": "References the Service the memory concerns, when it concerns one; null otherwise." },
+    "source": { "type": "string", "enum": ["user_stated", "user_confirmed"], "description": "How the memory entered the store; never inferred silently." },
+    "status": { "type": "string", "enum": ["active", "superseded", "withdrawn"], "description": "Memory lifecycle state; superseded means a newer item replaced it, withdrawn means consent was withdrawn or the user deleted it." },
+    "supersededBy": { "type": ["string", "null"], "description": "References the MemoryItem that replaced this one; null unless superseded." },
+    "createdAt": { "type": "string", "format": "date-time", "description": "Creation time (UTC)." },
+    "updatedAt": { "type": "string", "format": "date-time", "description": "Last update time (UTC)." }
+  },
+  "required": ["id", "userId", "kind", "subject", "value", "source", "status", "createdAt", "updatedAt"]
+}
+```
+
 ### Notification
 
 ```json
@@ -573,10 +623,15 @@ The model is flat and referential, targeting a relational primary database with 
 - **Contribution** `poolId` references **Pool**, each contribution belongs to exactly one pool.
 - **Contribution** `contributorId` references **User**, each contribution is made by exactly one user.
 - **Contribution** `paymentId` references **Payment**, a contribution is settled by at most one payment.
+- **UserPreference** `userId` references **User**, each preference belongs to exactly one user.
+- **UserPreference** `serviceId` references **Service**, a preference names at most one service.
+- **MemoryItem** `userId` references **User**, each memory item belongs to exactly one user.
+- **MemoryItem** `serviceId` references **Service**, a memory item concerns at most one service.
+- **MemoryItem** `supersededBy` references **MemoryItem**, a superseded item points to the item that replaced it.
 - **Notification** `userId` references **User**, each notification targets exactly one user.
 - **ComplianceFinding** `closedBy` references **StaffAccount**, a finding is closed by at most one staff account.
 - **AuditExport** `requestedBy` references **StaffAccount**, each export is requested by exactly one staff account.
 
 ## Personal data
 
-Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, `Provider.contactEmail`, `StaffAccount.email`, `StaffAccount.passwordHash`, and `StaffAccount.totpSecret`. `AuthCredential.credentialId` and `AuthCredential.lookupDigest` are non-secret identifiers and carry no `x-personal-data` annotation. `StaffAccount.passwordHash` is one-way and `StaffAccount.totpSecret` is a secret that is encrypted at rest and never returned, because it must be decryptable to verify codes; both are staff personal data, never written to a log, and never returned on the wire. `ComplianceFinding.target` is opaque and carries no `x-personal-data` annotation, and no personal data is copied into a finding row. Analytics events reference `User.id` only and never these fields.
+Fields annotated `x-personal-data: true` are subject to the retention, residency, and deletion rules in [nfr](nfr.md): `User.displayName`, `AuthCredential.publicKey`, `AuthCredential.secretHash`, `ChannelLink.address`, `IdentityVerification.identifierMasked`, `PaymentMethod.maskedIdentifier`, `PaymentMethod.processorToken`, `Provider.contactEmail`, `UserPreference.value`, `MemoryItem.subject`, `MemoryItem.value`, `StaffAccount.email`, `StaffAccount.passwordHash`, and `StaffAccount.totpSecret`. Durable assistant memory in `UserPreference` and `MemoryItem` is consent-gated personal data: it is captured only from an explicit user statement or a user-confirmed correction, it is hard-deleted on withdrawal under NFR-040, and it is never a source of a payment fact. `AuthCredential.credentialId` and `AuthCredential.lookupDigest` are non-secret identifiers and carry no `x-personal-data` annotation. `StaffAccount.passwordHash` is one-way and `StaffAccount.totpSecret` is a secret that is encrypted at rest and never returned, because it must be decryptable to verify codes; both are staff personal data, never written to a log, and never returned on the wire. `ComplianceFinding.target` is opaque and carries no `x-personal-data` annotation, and no personal data is copied into a finding row. Analytics events reference `User.id` only and never these fields.

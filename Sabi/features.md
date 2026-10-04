@@ -444,6 +444,76 @@ Tracks known obligations and deadlines and reminds the user ahead of time, with 
 - Deadline changes at the agency: update and re-notify.
 - Payment already made: suppress the reminder and show the receipt.
 
+### FEAT-023: Account grounding in the assistant
+
+**Priority:** P1
+**Effort:** M
+**Depends On:** FEAT-003, FEAT-008
+
+**User story:**
+As a user, I want the assistant to already know my receipts, my open obligations, and my verification status when I talk to it, so that I do not re-state what Sabi already holds and can be addressed by name.
+
+**Description:**
+Each turn, the orchestrator retrieves a bounded account context for the asking user, their display name, verification status, recent receipts, and active obligations, and grounds the answer in those records rather than in model memory. The assistant uses `User.displayName` to address the user familiarly whenever it is present; a user may set it before identity verification, so the name is never tied to KYC. When no display name is held, the assistant addresses the user generically and does not invent one. The context is read-only: it is cited, never used to move money, and every payment still requires explicit confirmed authorisation. Output contract: the orchestrator passes a structured `account_context` object (identity summary, verification status, receipts, obligations) to the model as retrieved, citable content; the answer cites the source record. Fallback: when a source is unavailable, the assistant states it cannot see that part of the account rather than answering from memory.
+
+**Acceptance criteria:**
+- **Given** a user with a stored display name, whether or not they are verified
+  **When** they send a request
+  **Then** the assistant may address them by name and the name comes from the user record.
+- **Given** a user with no display name
+  **When** they send a request
+  **Then** the assistant addresses them generically and does not invent a name.
+- **Given** a user asking "did I pay my land use charge?"
+  **When** a matching receipt exists
+  **Then** the answer cites the receipt record (reference, amount, date) rather than the model's recall.
+- **Given** a user with an obligation approaching its deadline
+  **When** they ask what is due
+  **Then** the assistant lists the obligation from the source record with its deadline.
+- **Given** a payment the user has not made
+  **When** the assistant is asked whether it was paid
+  **Then** the assistant says no matching record was found and does not fabricate one.
+
+**Edge cases and failure states:**
+- Account context unavailable: state the part that cannot be seen and continue; never substitute a remembered amount or reference.
+- A receipt is disputed or unverified: surface `Receipt.verificationStatus` and the plain reason, not a bare claim of payment.
+- Context belongs to another account: never disclose another user's records; return nothing for the mismatched reference.
+- A name is stated in the moment by a user who has none on record: use it for that conversation only and do not persist it (persisting it is FEAT-024).
+
+### FEAT-024: Assistant long-term memory
+
+**Priority:** P2
+**Effort:** M
+**Depends On:** FEAT-003
+
+**User story:**
+As a returning user, I want the assistant to remember my corrections and my stated preferences across conversations, so that I do not repeat them every time ("always Ikeja Electric for me").
+
+**Description:**
+Persists a bounded set of durable memory per user across sessions: explicit corrections (for example, the right meter number) and stated preferences (for example, a default biller or a preferred channel). Memory is captured only from an explicit user statement or a user-confirmed correction, never inferred silently, and is consent-gated and user-manageable under [nfr](nfr.md) (NFR-040). Memory is advisory: it may pre-fill or narrow a resolution, but it never supplies a fact and never overrides a source record or the confirmation gate. Output contract: the orchestrator passes retrieved `user_preferences` and `memory_items` as untrusted, cited context; a payment field resolved from memory is re-confirmed against the catalogue before use. Fallback: when memory is disabled, ambiguous, or withdrawn, the assistant behaves as a first-time assistant for that user.
+
+**Acceptance criteria:**
+- **Given** a user who says "always use Ikeja Electric for my electricity"
+  **When** they next request an electricity payment
+  **Then** Ikeja Electric is proposed first and the user confirms before payment.
+- **Given** a user who corrects a stored detail
+  **When** they confirm the correction
+  **Then** the memory is updated and the prior value is not used.
+- **Given** a user who has not consented to durable memory
+  **When** they use the assistant
+  **Then** nothing is persisted across sessions and behaviour is first-time.
+- **Given** a user who withdraws consent or deletes a memory item
+  **When** the request is processed
+  **Then** the stored item is hard-deleted under the NFR-040 lifecycle and no longer affects answers.
+- **Given** a stored preference that conflicts with the current catalogue
+  **When** it is applied
+  **Then** the catalogue wins and the assistant says so.
+
+**Edge cases and failure states:**
+- Ambiguous correction: do not store; ask which value is right.
+- Memory points to a retired or unavailable service: ignore it and offer current results.
+- Conflicting preferences: prefer the most recent explicitly stated value and surface the conflict.
+- Memory store unavailable: answer first-time; never guess a remembered fact.
+
 ### FEAT-017: Receipt verification for third parties
 
 **Priority:** P1
@@ -609,8 +679,8 @@ Deferred. Lending and deposit-taking require a licence Sabi does not hold, and P
 | Priority | Count | Feature IDs |
 |---|---|---|
 | P0 | 12 | FEAT-001, FEAT-002, FEAT-003, FEAT-004, FEAT-005, FEAT-006, FEAT-007, FEAT-008, FEAT-009, FEAT-010, FEAT-011, FEAT-012 |
-| P1 | 5 | FEAT-013, FEAT-014, FEAT-015, FEAT-016, FEAT-017 |
-| P2 | 3 | FEAT-018, FEAT-019, FEAT-020 |
+| P1 | 6 | FEAT-013, FEAT-014, FEAT-015, FEAT-016, FEAT-017, FEAT-023 |
+| P2 | 4 | FEAT-018, FEAT-019, FEAT-020, FEAT-024 |
 | P3 | 2 | FEAT-021, FEAT-022 |
 
 ## Persona coverage
@@ -619,7 +689,7 @@ Every persona is served by at least one feature, and the mapping runs both ways.
 
 | Persona | Features serving them |
 |---|---|
-| Ngozi | FEAT-006, FEAT-007, FEAT-013, FEAT-016, FEAT-018 |
-| Musa | FEAT-007, FEAT-010, FEAT-016 |
-| Ifeoma | FEAT-006, FEAT-008, FEAT-012, FEAT-014, FEAT-017, FEAT-020 |
-| Tunde | FEAT-006, FEAT-008, FEAT-013, FEAT-014, FEAT-015 |
+| Ngozi | FEAT-006, FEAT-007, FEAT-013, FEAT-016, FEAT-018, FEAT-023, FEAT-024 |
+| Musa | FEAT-007, FEAT-010, FEAT-016, FEAT-023, FEAT-024 |
+| Ifeoma | FEAT-006, FEAT-008, FEAT-012, FEAT-014, FEAT-017, FEAT-020, FEAT-023, FEAT-024 |
+| Tunde | FEAT-006, FEAT-008, FEAT-013, FEAT-014, FEAT-015, FEAT-023, FEAT-024 |
