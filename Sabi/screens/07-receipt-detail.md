@@ -6,7 +6,7 @@
 **Purpose:** Show one receipt with its official identifier and verification state, and let the user share or export it. This screen is an alternate surface: the same receipt can be rendered inline in the conversation as a composed record surface, and neither route is the fallback for the other.
 **Visual Focus:** The receipt amount and its verified official identifier.
 **Action Hierarchy:** Primary: Share; Secondary: export; Tertiary: raise a dispute.
-**Entry Points:** [Receipts](06-receipts.md), [Home](03-home.md), [Payment Confirmation](04-payment-confirmation.md). From Home it is reached either as a composed inline surface or as the alternate screen, left to the user.
+**Entry Points:** [Receipts](06-receipts.md), [Home](03-home.md). From Home it is reached either as a composed inline surface or as the screen, left to the user.
 **Exit Points:** [Case](08-case.md); back to the previous screen. A dispute is also reachable inline in the conversation.
 
 ### Layout

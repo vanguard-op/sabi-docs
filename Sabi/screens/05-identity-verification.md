@@ -3,11 +3,11 @@
 **Route:** `/account/verify`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Verify the user's identity once against the national identity infrastructure, so regulated payments can proceed. This screen is an alternate surface: verification can also be composed inline in the conversation on Home, and neither route is the fallback for the other.
+**Purpose:** Verify the user's identity once against the national identity infrastructure, so regulated payments can proceed. The conversation is the primary path: when a payment requires KYC, the ceremony is composed inline on [Home](03-home.md) and the payment resumes there. This screen remains reachable from Account for a user who verifies outside a payment.
 **Visual Focus:** The verification status and the single verify action.
 **Action Hierarchy:** Primary: Verify; Secondary: correct details; Tertiary: how identity data is used.
-**Entry Points:** [Account](09-account.md); [Payment Confirmation](04-payment-confirmation.md) when a payment requires KYC; [Home](03-home.md), composed inline in the conversation. The user chooses the route.
-**Exit Points:** [Payment Confirmation](04-payment-confirmation.md) to resume a held payment; [Account](09-account.md). A held payment also resumes inline in the conversation.
+**Entry Points:** [Account](09-account.md). When a payment requires KYC, the ceremony is composed inline in the conversation on [Home](03-home.md), the primary path; this screen is the route for a user who verifies from Account.
+**Exit Points:** [Account](09-account.md). A held payment resumes inline in the conversation on [Home](03-home.md).
 
 ### Layout
 
@@ -37,7 +37,7 @@
 **Data Flow:**
 1. Screen mounts → show current verification status.
 2. Submit → call the identity provider → store the verification status on the account.
-3. Verified → return to the held payment, which resumes, or to Account.
+3. Verified → return to the held payment, which resumes inline in the conversation, or to Account.
 4. No match → show a plain reason and allow one correction.
 
 ### States

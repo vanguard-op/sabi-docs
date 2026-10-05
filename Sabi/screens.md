@@ -7,7 +7,6 @@
 | 1 | Welcome | [01-welcome](screens/01-welcome.md) | `/welcome` | Mobile | FEAT-001 |
 | 2 | Sign In | [02-sign-in](screens/02-sign-in.md) | `/sign-in` | Mobile | FEAT-001 |
 | 3 | Home | [03-home](screens/03-home.md) | `/home` | Mobile | FEAT-003, FEAT-004, FEAT-011 |
-| 4 | Payment Confirmation | [04-payment-confirmation](screens/04-payment-confirmation.md) | `/pay/:intentId` | Mobile | FEAT-005, FEAT-011 |
 | 5 | Identity Verification | [05-identity-verification](screens/05-identity-verification.md) | `/account/verify` | Mobile | FEAT-002 |
 | 6 | Receipts | [06-receipts](screens/06-receipts.md) | `/receipts` | Mobile | FEAT-008 |
 | 7 | Receipt Detail | [07-receipt-detail](screens/07-receipt-detail.md) | `/receipts/:receiptId` | Mobile | FEAT-006, FEAT-008, FEAT-017 |
@@ -16,7 +15,7 @@
 
 USSD prompts and WhatsApp messages are channel surfaces owned by their providers; they are content, not screens of the mobile product, and are documented in [user-flow](user-flow.md).
 
-The existing screens are an alternate route to the same tasks, not a fallback. The conversation on Home is a first-class path to every task, composing the task surface inline; Payment Confirmation, Identity Verification, Receipts, Receipt Detail, Case, and Account remain fully functional screens the user may choose instead. Neither path is the fallback for the other: the user chooses, and the app never forces one route.
+The conversation on Home is the primary and complete path: payment authorisation and mandate signing, variable amount entry, the identity ceremony, and case or failure recovery each compose their surface inline in the conversation and complete there, with no navigation to a separate screen. The screens that remain are those a non-conversation surface still reaches: Receipts, Receipt Detail, and Account from the navigation shell, Identity Verification from Account, and Case from Receipt Detail. Adding a provider adds no route.
 
 The Operations Console is a separate staff web surface, specified in [operations-console](operations-console.md). It is not an inventory entry of the mobile product: it has no route here, is not in the navigation map below, and is never exposed to an end user.
 
@@ -27,32 +26,25 @@ graph TD
     Welcome -->|Get started| Home
     Welcome -->|Sign in| SignIn[Sign In]
     SignIn -->|Passkey or recovery code| Home
-    Home -->|Start a payment| PaymentConfirmation[Payment Confirmation]
-    Home -->|Verify identity| IdentityVerification[Identity Verification]
     Home -->|Open a record| ReceiptDetail[Receipt Detail]
-    Home -->|Resolve a failed payment| Case
     Home -->|Open records| Receipts
     Home -->|Open profile| Account
-    PaymentConfirmation -->|Payment needs KYC| IdentityVerification
-    IdentityVerification -->|Verified| PaymentConfirmation
-    PaymentConfirmation -->|Payment accepted| ReceiptDetail
-    PaymentConfirmation -->|Unresolved payment| Case
     Receipts -->|Open a receipt| ReceiptDetail
     ReceiptDetail -->|Dispute or reversal| Case
-    Account -->|Verify identity| IdentityVerification
+    Account -->|Verify identity| IdentityVerification[Identity Verification]
 ```
 
-Every edge out of Home is also reachable inside the conversation: Home composes the same task surface inline, and the arrow denotes the alternate screen the user may choose instead. Neither is the fallback for the other.
+Home carries no navigation edge for a task, because every task completes inline in the conversation. The edges it keeps are the navigation-shell destinations (Receipts, Account) and the record-lookup route to Receipt Detail; Identity Verification is reached from Account and Case from Receipt Detail.
 
 ## Shared / Common Components
 
 ### Navigation Shell
 Used on: Home, Receipts, Account
 - Mobile: BottomNavigationBar with 3 tabs: Home, Receipts, Account.
-- Hidden on Welcome, Sign In, Payment Confirmation, Identity Verification, and Case. Those screens are alternate destinations the user may choose instead of completing the same task in the conversation; the hidden shell is presentation, not a statement that the conversation is the only route.
+- Hidden on Welcome, Sign In, Identity Verification, and Case. Those screens are reached from Account and Receipt Detail, not from a task in the conversation.
 
 ### Composed Task Surface
-Used on: Home, Payment Confirmation, Identity Verification, Case
+Used on: Home, Identity Verification, Case
 - The agent-composed container. It renders only components in the published Sabi catalog, never a raw message. It is the task mechanism: every task and record type is rendered from it, and the prewritten shell around it (composer, navigation, static chrome, fixed buttons and labels) is not in the catalog and is never composed.
 - The client publishes the Sabi catalog (a JSON Schema conforming to A2UI's Catalog schema, with a `catalogId` URI) and advertises its `supportedCatalogIds`. The catalog is the single source of truth the agent composes against and both sides validate against. Its composed surfaces are the confirmation summary, amount entry, provider picker, service result row, receipt card, status pill, verification, and recovery; the shell is not among them.
 - Consumes an A2UI message stream: surface creation (naming the `catalogId`), components, and data model; the client renders natively with brand tokens through the official Flutter GenUI SDK renderer.
@@ -61,7 +53,7 @@ Used on: Home, Payment Confirmation, Identity Verification, Case
 - Discards a malformed UI message without losing the task; renders placeholders for partial data.
 
 ### Confirmation Summary
-Used on: Payment Confirmation, Case
+Used on: Home, Case
 - Shows the amount, payee, charges, and reference in one block.
 - The amount uses the `h2` type token; the payee and charges are `text-secondary`.
 
@@ -93,11 +85,11 @@ Used on: all screens
 - Persistent banner stating what is queued and its sync status. No payment can be authorised while offline.
 
 ### Success Toast
-Used on: Payment Confirmation, Receipt Detail
+Used on: Home, Receipt Detail
 - Confirms a stored receipt or token. It never carries the only success signal; the Status Pill also carries it.
 
 ### Amount Entry
-Used on: Payment Confirmation
+Used on: Home
 - Bottom sheet for a variable amount; validates against the biller's range.
 
 ### Provider Picker
@@ -113,6 +105,6 @@ Used on: Home
 | Splash graphic | The mark on the warm off-white surface | App launch | Brand Mark Direction |
 | Empty-state illustration | A receipt book with no pages written yet | Empty states on Home and Receipts | Illustration Direction |
 | Offline illustration | A signal broken between a phone and a service | Offline state | Illustration Direction |
-| Success animation | A receipt tear forming a settled tick | Payment Confirmation success; Receipt Detail arrival | Motion Direction |
-| Pending animation | A gentle loop while a payment reconciles | Payment Confirmation and Case pending | Motion Direction |
+| Success animation | A receipt tear forming a settled tick | Payment success inline in the conversation; Receipt Detail arrival | Motion Direction |
+| Pending animation | A gentle loop while a payment reconciles | Payment reconciliation inline in the conversation and Case pending | Motion Direction |
 | Error animation | A receipt edge re-tearing and settling flat | Payment failure states | Motion Direction |

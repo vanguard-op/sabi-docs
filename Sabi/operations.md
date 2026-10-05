@@ -185,7 +185,7 @@ The audit log covers authentication, authorisation, and privileged actions, and 
 
 ## Operations Console surface scope
 
-The Operations Console is the staff and provider surface described in [architecture](architecture.md). It is not a screen of the mobile product and is not one of the nine screens in [screens](screens.md); it does not appear in the screen inventory or the navigation map. Users reach operations only through the existing user surfaces: the [Case screen](screens/08-case.md), the receipt dispute action on [Receipt Detail](screens/07-receipt-detail.md), and the reachable support channels. The console is never exposed to end users. The console surface itself, its Phase 1 views, its staff login, and its hosting position are specified in [operations-console](operations-console.md).
+The Operations Console is the staff and provider surface described in [architecture](architecture.md). It is not a screen of the mobile product and is not one of the eight screens in [screens](screens.md); it does not appear in the screen inventory or the navigation map. Users reach operations only through the existing user surfaces: the [Case screen](screens/08-case.md), the receipt dispute action on [Receipt Detail](screens/07-receipt-detail.md), and the reachable support channels. The console is never exposed to end users. The console surface itself, its Phase 1 views, its staff login, and its hosting position are specified in [operations-console](operations-console.md).
 
 | Phase | Console surface |
 |---|---|

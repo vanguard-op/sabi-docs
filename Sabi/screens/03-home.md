@@ -3,11 +3,11 @@
 **Route:** `/home`
 **Platform:** Mobile
 **Presentation:** Page
-**Purpose:** Let the user state what they need to pay in their own words, resolve it, and reach confirmation. Home is also the primary path: it composes and completes every task inline in the conversation, and resolves record lookups, with the existing screens kept as an equal alternate route the user may choose.
+**Purpose:** Let the user state what they need to pay in their own words, resolve it, and complete it. Home is the primary and complete path: it composes and completes every task inline in the conversation, and resolves record lookups, with the remaining screens reached where a non-conversation surface still leads to them.
 **Visual Focus:** The composer at the base of the screen and the composed surface it produces above.
 **Action Hierarchy:** Primary: Send; Secondary: select a discovery result; Tertiary: clarify or ask for help.
-**Entry Points:** [Welcome](01-welcome.md), [Sign In](02-sign-in.md), the Home tab of the navigation shell, [Payment Confirmation](04-payment-confirmation.md) back action.
-**Exit Points:** Every task is completable inline; the user may instead choose the alternate screen: [Payment Confirmation](04-payment-confirmation.md), [Identity Verification](05-identity-verification.md), [Receipts](06-receipts.md), [Receipt Detail](07-receipt-detail.md), [Case](08-case.md), [Account](09-account.md). Neither the conversation nor the screen is the fallback for the other.
+**Entry Points:** [Welcome](01-welcome.md), [Sign In](02-sign-in.md), the Home tab of the navigation shell.
+**Exit Points:** Every task is completable inline. The remaining screens are reached where a non-conversation surface still leads to them: [Receipts](06-receipts.md), [Receipt Detail](07-receipt-detail.md), and [Account](09-account.md) from the navigation shell; [Identity Verification](05-identity-verification.md) from Account; [Case](08-case.md) from Receipt Detail.
 
 ### Layout
 
@@ -51,7 +51,7 @@
 3. Multiple matches → provider picker; single match → continue.
 4. A task completes inline: the composed surface carries confirmation, amount entry, provider choice, verification, record viewing, or recovery in the conversation, with no navigation required.
 5. A record lookup → ground in the user's records → render the record inline as a composed surface, or route the user to the existing screen, leaving the choice to the user.
-6. The user may instead choose the alternate screen at any point; neither route is the fallback for the other.
+6. The remaining screens stay reachable where a non-conversation surface leads to them; no task requires leaving the conversation.
 7. Failure → inline error with retry, preserving the request.
 
 ### States
